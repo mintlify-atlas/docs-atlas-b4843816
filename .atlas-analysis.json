@@ -1,0 +1,141 @@
+{
+  "projectType": "saas",
+  "projectName": "Sendook",
+  "projectDescription": "Email infrastructure for AI agents at scale - send and receive emails programmatically with webhooks and custom domains.",
+  "theme": "aspen",
+  "primaryColor": "#040404",
+  "lightColor": "#fcc404",
+  "darkColor": "#dcac04",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/inboxes",
+              "features/sending-emails",
+              "features/receiving-emails",
+              "features/webhooks",
+              "features/custom-domains",
+              "features/threads"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/authentication",
+              "guides/dashboard",
+              "guides/billing",
+              "guides/self-hosting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/inboxes",
+              "api/messages",
+              "api/threads",
+              "api/domains",
+              "api/webhooks",
+              "api/api-keys"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "Node.js SDK",
+            "pages": [
+              "sdk/installation",
+              "sdk/usage",
+              "sdk/api-reference"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Send and receive emails programmatically",
+    "Webhook integration for inbound emails",
+    "Custom domain support with DNS verification",
+    "Thread-based email management",
+    "TypeScript SDK for Node.js",
+    "Dashboard for managing inboxes and messages",
+    "Usage-based billing with Stripe",
+    "Self-hosting support with Docker"
+  ],
+  "publicApiSurface": [
+    "POST /v1/inboxes - Create inbox",
+    "GET /v1/inboxes - List inboxes",
+    "GET /v1/inboxes/:id - Get inbox",
+    "DELETE /v1/inboxes/:id - Delete inbox",
+    "POST /v1/inboxes/:id/messages/send - Send message",
+    "POST /v1/inboxes/:id/messages/:messageId/reply - Reply to message",
+    "GET /v1/inboxes/:id/messages - List messages",
+    "GET /v1/inboxes/:id/messages/:messageId - Get message",
+    "GET /v1/inboxes/:id/threads - List threads",
+    "GET /v1/inboxes/:id/threads/:threadId - Get thread",
+    "POST /v1/domains - Create domain",
+    "GET /v1/domains/:id - Get domain",
+    "POST /v1/domains/:id/verify - Verify domain",
+    "GET /v1/domains/:id/dns - Get DNS records",
+    "DELETE /v1/domains/:id - Delete domain",
+    "POST /v1/webhooks - Create webhook",
+    "GET /v1/webhooks - List webhooks",
+    "GET /v1/webhooks/:id - Get webhook",
+    "POST /v1/webhooks/:id/test - Test webhook",
+    "DELETE /v1/webhooks/:id - Delete webhook",
+    "POST /v1/api_keys - Create API key",
+    "GET /v1/api_keys - List API keys",
+    "GET /v1/api_keys/:id - Get API key",
+    "DELETE /v1/api_keys/:id - Delete API key",
+    "client.inbox.create() - Node SDK",
+    "client.inbox.list() - Node SDK",
+    "client.inbox.get() - Node SDK",
+    "client.inbox.delete() - Node SDK",
+    "client.inbox.message.send() - Node SDK",
+    "client.inbox.message.reply() - Node SDK",
+    "client.inbox.message.list() - Node SDK",
+    "client.inbox.message.get() - Node SDK",
+    "client.inbox.thread.list() - Node SDK",
+    "client.inbox.thread.get() - Node SDK",
+    "client.domain.create() - Node SDK",
+    "client.domain.get() - Node SDK",
+    "client.domain.verify() - Node SDK",
+    "client.domain.dns() - Node SDK",
+    "client.domain.delete() - Node SDK",
+    "client.webhook.create() - Node SDK",
+    "client.webhook.list() - Node SDK",
+    "client.webhook.get() - Node SDK",
+    "client.webhook.test() - Node SDK",
+    "client.webhook.delete() - Node SDK",
+    "client.apiKey.create() - Node SDK",
+    "client.apiKey.list() - Node SDK",
+    "client.apiKey.get() - Node SDK",
+    "client.apiKey.delete() - Node SDK"
+  ]
+}
