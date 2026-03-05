@@ -1,0 +1,429 @@
+---
+title: "Webhooks"
+description: "Receive real-time notifications for emails and inbox events"
+---
+
+## Overview
+
+Webhooks allow you to receive real-time notifications when events occur in your Sendook account. You can subscribe to events like receiving emails, delivery confirmations, bounces, and more.
+
+## Creating a Webhook
+
+Set up a webhook by specifying your endpoint URL and the events you want to receive:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+import Sendook from "@sendook/node";
+
+const client = new Sendook("your_api_key");
+
+await client.webhook.create({
+  url: "https://your-app.com/webhooks/sendook",
+  events: ["message.received", "message.delivered"]
+});
+```
+
+```bash cURL
+curl -X POST https://api.sendook.com/v1/webhooks \
+  -H "Authorization: Bearer your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/webhooks/sendook",
+    "events": ["message.received", "message.delivered"]
+  }'
+```
+
+</CodeGroup>
+
+## Available Events
+
+Subscribe to any of the following events:
+
+### Inbox Events
+
+| Event | Description |
+|-------|-------------|
+| `inbox.created` | New inbox was created |
+| `inbox.deleted` | Inbox was deleted |
+| `inbox.updated` | Inbox details were updated |
+
+### Message Events
+
+| Event | Description |
+|-------|-------------|
+| `message.sent` | Message was sent to AWS SES |
+| `message.received` | Incoming email was received |
+| `message.delivered` | Message was successfully delivered to recipient |
+| `message.bounced` | Message bounced (invalid email or rejection) |
+| `message.complained` | Recipient marked message as spam |
+| `message.rejected` | Message was rejected before sending |
+
+<Tip>
+  You can subscribe to multiple events in a single webhook by providing an array of event names.
+</Tip>
+
+## Webhook Payload Structure
+
+All webhooks follow this structure:
+
+```json
+{
+  "event": "message.received",
+  "messageId": "msg_789",
+  "inboxId": "inbox_123",
+  "payload": {
+    // Event-specific data
+  }
+}
+```
+
+### Common Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `event` | string | The event type that triggered the webhook |
+| `messageId` | string | ID of the related message (if applicable) |
+| `inboxId` | string | ID of the related inbox (if applicable) |
+| `payload` | object | Event-specific data |
+
+## Event Payload Examples
+
+### message.received
+
+```json
+{
+  "event": "message.received",
+  "messageId": "msg_789",
+  "inboxId": "inbox_123",
+  "payload": {
+    "id": "msg_789",
+    "organizationId": "org_456",
+    "inboxId": "inbox_123",
+    "threadId": "thread_012",
+    "from": "sender@example.com",
+    "to": ["support@sendook.com"],
+    "subject": "Help with my account",
+    "text": "I need help...",
+    "html": "I need help...",
+    "status": "received",
+    "createdAt": "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
+### message.delivered
+
+```json
+{
+  "event": "message.delivered",
+  "messageId": "msg_456",
+  "inboxId": "inbox_123",
+  "payload": {
+    "id": "msg_456",
+    "organizationId": "org_456",
+    "inboxId": "inbox_123",
+    "threadId": "thread_012",
+    "from": "support@sendook.com",
+    "to": ["customer@example.com"],
+    "subject": "Welcome!",
+    "status": "delivered",
+    "createdAt": "2024-01-01T12:00:00.000Z",
+    "updatedAt": "2024-01-01T12:05:00.000Z"
+  }
+}
+```
+
+### message.bounced
+
+```json
+{
+  "event": "message.bounced",
+  "messageId": "msg_456",
+  "inboxId": "inbox_123",
+  "payload": {
+    "id": "msg_456",
+    "status": "bounced",
+    "from": "support@sendook.com",
+    "to": ["invalid@example.com"],
+    "subject": "Welcome!",
+    // ... other message fields
+  }
+}
+```
+
+### inbox.created
+
+```json
+{
+  "event": "inbox.created",
+  "inboxId": "inbox_789",
+  "payload": {
+    "id": "inbox_789",
+    "organizationId": "org_456",
+    "name": "support",
+    "email": "support@sendook.com",
+    "createdAt": "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
+## Managing Webhooks
+
+### List All Webhooks
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const webhooks = await client.webhook.list();
+
+console.log(webhooks);
+// [
+//   {
+//     id: "webhook_123",
+//     url: "https://your-app.com/webhooks/sendook",
+//     events: ["message.received", "message.delivered"]
+//   }
+// ]
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/webhooks \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+### Get Webhook Details
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const webhook = await client.webhook.get("webhook_123");
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/webhooks/webhook_123 \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+### Delete a Webhook
+
+<CodeGroup>
+
+```typescript Node.js SDK
+await client.webhook.delete("webhook_123");
+```
+
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/webhooks/webhook_123 \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+## Testing Webhooks
+
+Test your webhook endpoint to verify it's working correctly:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+await client.webhook.test("webhook_123");
+// Sends a test message.received event to your endpoint
+```
+
+```bash cURL
+curl -X POST https://api.sendook.com/v1/webhooks/webhook_123/test \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+The test sends a `message.received` event with dummy data:
+
+```json
+{
+  "event": "message.received",
+  "payload": {
+    "test": "test"
+  }
+}
+```
+
+## Implementing a Webhook Endpoint
+
+Your webhook endpoint should:
+
+1. Accept POST requests
+2. Parse JSON body
+3. Process the event
+4. Respond with 2xx status code
+
+<CodeGroup>
+
+```typescript Express.js
+import express from "express";
+
+const app = express();
+
+app.post("/webhooks/sendook", express.json(), async (req, res) => {
+  try {
+    const { event, messageId, inboxId, payload } = req.body;
+    
+    console.log(`Received webhook: ${event}`);
+    
+    // Handle different event types
+    switch (event) {
+      case "message.received":
+        console.log(`New email from ${payload.from}`);
+        // Process received email
+        break;
+        
+      case "message.delivered":
+        console.log(`Message ${messageId} delivered`);
+        // Update delivery status in your database
+        break;
+        
+      case "message.bounced":
+        console.log(`Message ${messageId} bounced`);
+        // Handle bounce (e.g., remove from mailing list)
+        break;
+        
+      case "inbox.created":
+        console.log(`New inbox: ${payload.email}`);
+        break;
+    }
+    
+    // Always respond with 200
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.listen(3000, () => {
+  console.log("Webhook server listening on port 3000");
+});
+```
+
+```typescript Next.js
+// app/api/webhooks/sendook/route.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { event, messageId, inboxId, payload } = await req.json();
+    
+    console.log(`Received webhook: ${event}`);
+    
+    switch (event) {
+      case "message.received":
+        // Handle received email
+        break;
+        
+      case "message.delivered":
+        // Handle delivery confirmation
+        break;
+        
+      case "message.bounced":
+        // Handle bounce
+        break;
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+</CodeGroup>
+
+<Warning>
+  Your webhook endpoint must respond within 5 seconds. For long-running operations, acknowledge the webhook immediately and process asynchronously.
+</Warning>
+
+## Webhook Retry Logic
+
+If your endpoint fails to respond with a 2xx status code:
+
+- Sendook will retry the webhook up to 3 times
+- Retries use exponential backoff (5s, 25s, 125s)
+- After 3 failed attempts, the webhook delivery is marked as failed
+- Repeated failures may result in your webhook being disabled
+
+<Tip>
+  Monitor your webhook endpoint's uptime and response times to ensure reliable event delivery.
+</Tip>
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use HTTPS">
+    Always use HTTPS URLs for webhook endpoints to ensure data is encrypted in transit.
+  </Accordion>
+  
+  <Accordion title="Validate webhook source">
+    In production, validate that requests are coming from Sendook's servers by checking the source IP or implementing webhook signatures.
+  </Accordion>
+  
+  <Accordion title="Handle duplicates">
+    Store processed event IDs to prevent processing the same event multiple times if webhooks are retried.
+  </Accordion>
+  
+  <Accordion title="Respond quickly">
+    Acknowledge webhooks within 5 seconds. Queue heavy processing for background jobs.
+  </Accordion>
+  
+  <Accordion title="Monitor failures">
+    Set up alerts for webhook failures to catch issues early before webhooks are disabled.
+  </Accordion>
+</AccordionGroup>
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Email Notification System" icon="bell">
+    Use `message.received` to notify users of new emails in real-time.
+  </Card>
+  
+  <Card title="Delivery Tracking" icon="truck">
+    Monitor `message.delivered` and `message.bounced` to track email delivery rates.
+  </Card>
+  
+  <Card title="Auto-Reply Bot" icon="robot">
+    Respond to `message.received` events with automated replies.
+  </Card>
+  
+  <Card title="Support Ticket Creation" icon="ticket">
+    Create support tickets automatically when receiving emails.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Receiving Emails" icon="inbox" href="/features/receiving-emails">
+    Learn more about handling incoming emails
+  </Card>
+  
+  <Card title="Sending Emails" icon="paper-plane" href="/features/sending-emails">
+    Understand message statuses and delivery
+  </Card>
+  
+  <Card title="Threads" icon="comments" href="/features/threads">
+    Track conversations with thread IDs
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api/webhooks">
+    View complete webhook API documentation
+  </Card>
+</CardGroup>

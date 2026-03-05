@@ -1,0 +1,136 @@
+---
+title: Introduction
+description: Learn about Sendook - the easiest way to send and receive emails at scale
+---
+
+## What is Sendook?
+
+Sendook (Arabic for "box" - صندوق) is the easiest way to start sending **AND receiving** emails at scale. Built with developers in mind, Sendook provides a simple API and SDK to handle all your email needs.
+
+## Why Sendook?
+
+Sendook was built to solve real problems we encountered while building [Rupt](https://www.rupt.dev):
+
+<CardGroup cols={2}>
+  <Card title="Simple Email Setup" icon="envelope">
+    Setting up email sending at scale is still cumbersome - Sendook makes it simple with just a few API calls
+  </Card>
+  <Card title="Custom Domain Support" icon="globe">
+    Configure and verify custom domains with automatic DNS record management
+  </Card>
+  <Card title="Receive Emails" icon="inbox">
+    Unlike most email APIs, Sendook handles both sending and receiving emails with webhooks
+  </Card>
+  <Card title="Production Ready" icon="rocket">
+    Used extensively at Rupt for internal agents to handle inbound emails, payments, and prioritizations
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Inboxes
+
+Create and manage email inboxes with ease:
+
+- Use `@sendook.com` domain (no verification needed)
+- Connect custom domains with automatic DNS verification
+- List, retrieve, and delete inboxes
+- Automatic inbox deletion includes all associated messages
+
+### Messages
+
+Full-featured email messaging:
+
+- **Send emails** with To, CC, BCC, and attachments
+- **Thread management** - replies automatically thread conversations
+- **Labels** for organizing messages
+- **Search** with regex support across to, from, CC, subject, and body
+- **Rate limiting** - 100 messages per hour per inbox
+
+### Webhooks
+
+Real-time email event notifications:
+
+- `message.received` - Get notified when emails arrive
+- `message.sent` - Track when emails are sent
+- `message.delivered` - Confirm delivery status
+- `message.bounced` - Handle bounced emails
+- `message.rejected` - Track rejected messages
+- `inbox.created` - Monitor new inboxes
+- `inbox.deleted` - Track inbox deletions
+
+### Domains
+
+Custom domain management:
+
+- Add custom domains to your account
+- Automatic DNS record generation (MX, DKIM, SPF, DMARC)
+- One-click domain verification
+- Full CRUD operations for domain management
+
+## How It Works
+
+<Steps>
+  <Step title="Get Your API Key">
+    Sign up at [sendook.com](https://sendook.com) and get your API key from the dashboard
+  </Step>
+  
+  <Step title="Create an Inbox">
+    Create an inbox using either a `@sendook.com` email (instant) or your custom domain (requires DNS verification)
+  </Step>
+  
+  <Step title="Send & Receive Emails">
+    Use the API or SDK to send emails and set up webhooks to receive incoming messages
+  </Step>
+</Steps>
+
+<Note>
+  Using `@sendook.com` emails requires no verification. Custom domains need DNS records configured (MX for receiving, DKIM/SPF/DMARC for sending).
+</Note>
+
+## SDKs & Tools
+
+Sendook provides multiple ways to integrate:
+
+<CodeGroup>
+```bash npm
+npm install @sendook/node
+```
+
+```bash yarn
+yarn add @sendook/node
+```
+
+```bash bun
+bun add @sendook/node
+```
+</CodeGroup>
+
+**Available SDKs:**
+- Node.js / TypeScript (Official)
+- Python (Coming soon)
+- REST API for any language
+
+## Open Source
+
+Sendook is open source software licensed under the MIT license. You can:
+
+- Self-host the entire platform
+- Contribute SDKs for additional languages
+- Report issues and request features on GitHub
+- Review the source code and security practices
+
+<Card title="View on GitHub" icon="github" href="https://github.com/ruptlabs/sendook">
+  Explore the source code, contribute, or report issues
+</Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get started in 5 minutes
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore the complete API
+  </Card>
+</CardGroup>

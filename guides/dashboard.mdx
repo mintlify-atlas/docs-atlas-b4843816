@@ -1,0 +1,358 @@
+---
+title: Dashboard
+description: Learn how to use the Sendook dashboard to manage inboxes, messages, webhooks, and more
+---
+
+## Overview
+
+The Sendook dashboard is your web interface for managing email infrastructure. Access it at your deployed app URL or locally during development.
+
+## Getting Started
+
+### Sign Up
+
+1. Navigate to the dashboard URL
+2. Click **Sign Up**
+3. Enter your details:
+   - First name
+   - Last name
+   - Email address
+   - Password
+4. Click **Create account**
+
+When you register, Sendook automatically:
+- Creates your user account
+- Sets up a default organization
+- Generates your first API key
+- Creates an inbox with a random `@sendook.com` email address
+
+### Login
+
+1. Navigate to the dashboard
+2. Enter your email and password
+3. Click **Sign in**
+
+Your session is maintained with an access token stored in cookies.
+
+## Dashboard Sections
+
+### API Keys
+
+Manage API keys for programmatic access to Sendook.
+
+**Creating an API Key**
+
+1. Click **API Keys** in the sidebar
+2. Click **Generate key**
+3. Enter a descriptive name (e.g., "Production Key", "Development Key")
+4. Click **Generate key**
+5. Copy the key immediately - it's only shown once
+
+<Warning>
+  Store your API key securely. It provides full access to your organization's resources.
+</Warning>
+
+**Viewing API Keys**
+
+The API Keys page displays:
+- Key name
+- Key ID
+- Full API key (copy button provided)
+- Creation date
+
+**Deleting an API Key**
+
+1. Find the key you want to remove
+2. Click the **×** delete button
+3. Confirm deletion
+
+<Note>
+  Deleting an API key immediately revokes access for all clients using that key. Update your applications before deleting production keys.
+</Note>
+
+### Inboxes
+
+Inboxes are email addresses that can send and receive messages.
+
+**Creating an Inbox**
+
+1. Navigate to **Inboxes**
+2. Click **Create inbox**
+3. Choose your domain:
+   - **@sendook.com** - No verification required
+   - **Custom domain** - Requires DNS verification
+4. Enter the email prefix (e.g., "support" for support@yourdomain.com)
+5. Click **Create**
+
+**Inbox Types**
+
+<CardGroup cols={2}>
+  <Card title="Sendook Domain" icon="envelope">
+    Use `@sendook.com` addresses for immediate use. No DNS setup required.
+  </Card>
+  
+  <Card title="Custom Domain" icon="globe">
+    Use your own domain. Requires DNS verification with MX and DKIM records.
+  </Card>
+</CardGroup>
+
+**Managing Inboxes**
+
+- **View messages** - Click an inbox to see all sent and received messages
+- **Search messages** - Use regex search to find specific emails
+- **Delete inbox** - Permanently removes the inbox and all its messages
+
+### Messages
+
+View and manage all messages across your inboxes.
+
+**Message Details**
+
+Each message shows:
+- To/from addresses
+- Subject line
+- Message body (text and HTML)
+- Attachments
+- Thread information
+- Delivery status
+- Timestamps
+
+**Searching Messages**
+
+Use the search functionality to find messages:
+- Search by sender
+- Search by recipient
+- Search by subject
+- Search by body content
+- Regex patterns supported
+
+**Message States**
+
+- **Sent** - Successfully sent from your inbox
+- **Received** - Incoming message to your inbox
+- **Delivered** - Confirmed delivery to recipient
+- **Bounced** - Delivery failed (invalid address, mailbox full, etc.)
+- **Complained** - Recipient marked as spam
+- **Rejected** - Rejected by recipient server
+
+### Webhooks
+
+Configure webhooks to receive real-time notifications for inbox and message events.
+
+**Creating a Webhook**
+
+1. Navigate to **Webhooks**
+2. Click **Add webhook**
+3. Enter your webhook URL (e.g., `https://your-app.com/webhooks/sendook`)
+4. Select events to subscribe to:
+   - `inbox.created` - New inbox created
+   - `inbox.deleted` - Inbox deleted
+   - `inbox.updated` - Inbox updated
+   - `message.sent` - Message sent successfully
+   - `message.received` - New message received
+   - `message.delivered` - Message delivered to recipient
+   - `message.bounced` - Message bounced
+   - `message.complained` - Spam complaint received
+   - `message.rejected` - Message rejected
+5. Click **Add webhook**
+
+**Webhook Details**
+
+Click **View Details** on any webhook to see:
+- Webhook URL
+- Subscribed events
+- Recent delivery attempts
+- Success/error status
+- Timestamps
+
+**Testing Webhooks**
+
+1. Open webhook details
+2. Click **Test Webhook**
+3. Check your endpoint received the test payload
+4. Review the attempt status in the dashboard
+
+**Webhook Payload Example**
+
+```json
+{
+  "event": "message.received",
+  "timestamp": "2024-03-15T10:30:00Z",
+  "data": {
+    "messageId": "msg_abc123",
+    "inboxId": "inbox_xyz789",
+    "from": "sender@example.com",
+    "to": ["inbox@sendook.com"],
+    "subject": "Test Message",
+    "text": "Message body",
+    "html": "<p>Message body</p>"
+  }
+}
+```
+
+**Managing Webhooks**
+
+- **View attempts** - See recent delivery attempts and responses
+- **Test endpoint** - Send a test event to verify configuration
+- **Delete webhook** - Stop receiving events at this URL
+
+### Domains
+
+Manage custom domains for sending and receiving emails.
+
+**Adding a Custom Domain**
+
+1. Navigate to **Domains**
+2. Click **Add domain**
+3. Enter your domain name (e.g., "example.com")
+4. Click **Add**
+
+**Verifying Your Domain**
+
+1. Click **View DNS Records** on your domain
+2. Add the following records to your DNS provider:
+
+**MX Records** (for receiving emails):
+```
+Type: MX
+Name: @
+Value: inbound-smtp.us-east-1.amazonaws.com
+Priority: 10
+```
+
+**DKIM Records** (for email authentication):
+```
+Type: CNAME
+Name: [provided_subdomain]._domainkey
+Value: [provided_value].dkim.amazonses.com
+```
+
+**Optional Records**:
+
+- **SPF** - Authorize sending servers
+- **DMARC** - Email authentication policy
+
+3. Wait for DNS propagation (can take up to 48 hours)
+4. Click **Verify Domain**
+5. If verification succeeds, your domain status changes to "Verified"
+
+<Note>
+  DNS changes can take time to propagate. If verification fails, wait a few hours and try again.
+</Note>
+
+### Billing
+
+View payment methods and current month invoice.
+
+**Payment Method**
+
+Manage your payment card:
+- View current card details
+- Update payment method
+- View billing address
+
+**Current Invoice**
+
+See your current billing period:
+- Invoice status (Draft, Open, Paid)
+- Amount due
+- Billing period dates
+- Link to full invoice
+
+See the [Billing Guide](/guides/billing) for detailed pricing information.
+
+### Logs
+
+View system logs and activity history for debugging and auditing.
+
+## Dashboard Tips
+
+<CardGroup cols={2}>
+  <Card title="Multiple Organizations" icon="building">
+    Each user can belong to multiple organizations. Switch between them in the dashboard.
+  </Card>
+  
+  <Card title="Organization Scope" icon="users">
+    API keys, inboxes, and webhooks are scoped to organizations, not individual users.
+  </Card>
+  
+  <Card title="Real-time Updates" icon="bolt">
+    The dashboard updates in real-time when messages arrive or webhooks are triggered.
+  </Card>
+  
+  <Card title="Mobile Responsive" icon="mobile">
+    The dashboard works on mobile devices for managing emails on the go.
+  </Card>
+</CardGroup>
+
+## Security
+
+### Session Management
+
+Your session is maintained with access tokens. For security:
+- Log out when using shared computers
+- Use strong, unique passwords
+- Don't share your login credentials
+
+### API Key Security
+
+<Warning>
+  Never expose API keys in client-side code or public repositories. They provide full access to your organization's data.
+</Warning>
+
+Best practices:
+- Create separate keys for different environments
+- Rotate keys regularly
+- Delete unused keys
+- Use descriptive names to track key usage
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Can't Create Inbox">
+    - Check that your organization has an active payment method
+    - Verify your email format is valid
+    - For custom domains, ensure the domain is verified
+  </Accordion>
+  
+  <Accordion title="Webhook Not Receiving Events">
+    - Verify your endpoint URL is publicly accessible
+    - Check that your endpoint accepts POST requests
+    - Test the webhook using the "Test Webhook" button
+    - Review webhook attempts for error messages
+  </Accordion>
+  
+  <Accordion title="Domain Verification Failing">
+    - Wait 24-48 hours for DNS propagation
+    - Verify DNS records are added correctly (no typos)
+    - Check with your DNS provider that records are published
+    - Use DNS lookup tools to verify records are visible
+  </Accordion>
+  
+  <Accordion title="Messages Not Appearing">
+    - Check that the inbox exists and is active
+    - Verify sender/recipient addresses are correct
+    - Look in the Logs section for error messages
+    - Check webhook attempts for delivery issues
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate Sendook into your application
+  </Card>
+  
+  <Card title="Authentication" icon="key" href="/guides/authentication">
+    Learn about API keys and access tokens
+  </Card>
+  
+  <Card title="Webhooks Guide" icon="webhook" href="/api/webhooks">
+    Set up webhooks programmatically
+  </Card>
+  
+  <Card title="Self-Hosting" icon="server" href="/guides/self-hosting">
+    Run your own Sendook instance
+  </Card>
+</CardGroup>

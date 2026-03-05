@@ -1,0 +1,280 @@
+---
+title: "Sending Emails"
+description: "Send emails with attachments, CC/BCC, and custom labels"
+---
+
+## Overview
+
+Send emails from any inbox with full support for HTML, plain text, attachments, CC/BCC recipients, and custom labels. All sent emails are automatically organized into threads.
+
+## Sending a Basic Email
+
+<CodeGroup>
+
+```typescript Node.js SDK
+import Sendook from "@sendook/node";
+
+const client = new Sendook("your_api_key");
+
+// Send an email
+await client.inbox.message.send({
+  inboxId: "inbox_123",
+  to: ["recipient@example.com"],
+  subject: "Welcome to Sendook!",
+  text: "Thanks for signing up.",
+  html: "<p>Thanks for signing up.</p>"
+});
+```
+
+```bash cURL
+curl -X POST https://api.sendook.com/v1/inboxes/inbox_123/messages/send \
+  -H "Authorization: Bearer your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": ["recipient@example.com"],
+    "subject": "Welcome to Sendook!",
+    "text": "Thanks for signing up.",
+    "html": "<p>Thanks for signing up.</p>"
+  }'
+```
+
+</CodeGroup>
+
+<Note>
+  Both `text` and `html` fields are required. The HTML version will be shown to email clients that support it, while the text version is used as a fallback.
+</Note>
+
+## Required Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `inboxId` | string | ID of the inbox to send from |
+| `to` | string[] | Array of recipient email addresses |
+| `subject` | string | Email subject line |
+| `text` | string | Plain text version of the email |
+| `html` | string | HTML version of the email |
+
+## Optional Parameters
+
+### CC and BCC
+
+Send copies to additional recipients:
+
+```typescript
+await client.inbox.message.send({
+  inboxId: "inbox_123",
+  to: ["primary@example.com"],
+  cc: ["manager@example.com", "team@example.com"],
+  bcc: ["archive@example.com"],
+  subject: "Project Update",
+  text: "Here's the latest update...",
+  html: "<p>Here's the latest update...</p>"
+});
+```
+
+### Labels
+
+Organize emails with custom labels for easier filtering:
+
+```typescript
+await client.inbox.message.send({
+  inboxId: "inbox_123",
+  to: ["customer@example.com"],
+  labels: ["onboarding", "automated", "welcome-series"],
+  subject: "Welcome!",
+  text: "Welcome to our platform.",
+  html: "<p>Welcome to our platform.</p>"
+});
+```
+
+<Tip>
+  Labels are useful for categorizing messages in your dashboard and filtering messages via the API.
+</Tip>
+
+### Attachments
+
+Include files with your emails:
+
+```typescript
+await client.inbox.message.send({
+  inboxId: "inbox_123",
+  to: ["client@example.com"],
+  subject: "Invoice #1234",
+  text: "Please find your invoice attached.",
+  html: "<p>Please find your invoice attached.</p>",
+  attachments: [
+    {
+      content: "base64EncodedContent...",
+      name: "invoice.pdf",
+      contentType: "application/pdf"
+    },
+    {
+      content: "base64EncodedImageContent...",
+      name: "logo.png",
+      contentType: "image/png"
+    }
+  ]
+});
+```
+
+#### Attachment Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `content` | string | Yes | Base64-encoded file content |
+| `name` | string | No | Filename (e.g., "document.pdf") |
+| `contentType` | string | No | MIME type (e.g., "application/pdf") |
+
+<Warning>
+  Attachment content must be base64-encoded. Most programming languages have built-in libraries to encode files to base64.
+</Warning>
+
+## Replying to Messages
+
+Reply to an existing message to continue the conversation thread:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+await client.inbox.message.reply({
+  inboxId: "inbox_123",
+  messageId: "msg_456",
+  text: "Thanks for your message!",
+  html: "<p>Thanks for your message!</p>"
+});
+```
+
+```bash cURL
+curl -X POST https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456/reply \
+  -H "Authorization: Bearer your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Thanks for your message!",
+    "html": "<p>Thanks for your message!</p>"
+  }'
+```
+
+</CodeGroup>
+
+When you reply:
+- The subject is automatically prefixed with "Re:"
+- The recipient is set to the sender of the original message
+- The reply is added to the same thread as the original message
+
+## Response Format
+
+Successful send requests return the created message object:
+
+```json
+{
+  "id": "msg_789",
+  "organizationId": "org_456",
+  "inboxId": "inbox_123",
+  "threadId": "thread_012",
+  "from": "support@sendook.com",
+  "fromInboxId": "inbox_123",
+  "to": ["recipient@example.com"],
+  "cc": [],
+  "bcc": [],
+  "labels": ["welcome"],
+  "subject": "Welcome to Sendook!",
+  "text": "Thanks for signing up.",
+  "html": "<p>Thanks for signing up.</p>",
+  "attachments": [],
+  "status": "sent",
+  "externalMessageId": "<aws-ses-message-id>",
+  "createdAt": "2024-01-01T12:00:00.000Z",
+  "updatedAt": "2024-01-01T12:00:00.000Z"
+}
+```
+
+## Message Status
+
+Messages go through different statuses:
+
+| Status | Description |
+|--------|-------------|
+| `sent` | Message was successfully sent to AWS SES |
+| `delivered` | Message was delivered to recipient's mail server |
+| `bounced` | Message bounced (invalid email or server rejection) |
+| `complained` | Recipient marked the message as spam |
+| `rejected` | Message was rejected before sending |
+
+You'll receive webhook events for each status change. See [Webhooks](/features/webhooks) for details.
+
+## Rate Limits
+
+Sendook implements rate limiting to prevent abuse:
+
+- **100 emails per hour** per API key
+- Rate limit resets hourly
+
+<Warning>
+  If you exceed the rate limit, the API will return a 429 error. Plan your email sending accordingly or contact support for higher limits.
+</Warning>
+
+## Threads
+
+All sent messages are automatically organized into threads:
+
+- New messages create a new thread
+- Replies are added to existing threads
+- Each thread contains all messages in a conversation
+
+Learn more in [Threads](/features/threads).
+
+## Webhooks
+
+Sending emails triggers the following webhook events:
+
+- `message.sent` - Message was sent to AWS SES
+- `message.delivered` - Message was delivered successfully
+- `message.bounced` - Message bounced
+- `message.complained` - Recipient marked as spam
+- `message.rejected` - Message was rejected
+
+See [Webhooks](/features/webhooks) for setup instructions.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always include both text and HTML">
+    Some email clients don't support HTML or users may have it disabled. Always provide both versions for the best user experience.
+  </Accordion>
+  
+  <Accordion title="Keep attachments reasonable">
+    Large attachments can cause delivery issues. Consider hosting large files and including download links instead.
+  </Accordion>
+  
+  <Accordion title="Use labels for organization">
+    Labels make it easier to filter and search messages later. Use consistent naming conventions for your labels.
+  </Accordion>
+  
+  <Accordion title="Test with BCC">
+    When testing in production, use BCC to send yourself a copy without exposing your email to recipients.
+  </Accordion>
+  
+  <Accordion title="Monitor delivery status">
+    Set up webhooks to track delivery status and handle bounces appropriately in your application.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Receive Emails" icon="inbox" href="/features/receiving-emails">
+    Learn how to receive and process incoming emails
+  </Card>
+  
+  <Card title="Webhooks" icon="webhook" href="/features/webhooks">
+    Set up webhooks to track message status
+  </Card>
+  
+  <Card title="Threads" icon="comments" href="/features/threads">
+    Understand how threads organize conversations
+  </Card>
+  
+  <Card title="Custom Domains" icon="globe" href="/features/custom-domains">
+    Improve deliverability with custom domains
+  </Card>
+</CardGroup>

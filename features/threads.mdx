@@ -1,0 +1,402 @@
+---
+title: "Threads"
+description: "Organize email conversations with automatic thread management"
+---
+
+## Overview
+
+Threads group related messages into conversations, making it easy to track email exchanges. Sendook automatically creates and manages threads for both sent and received emails.
+
+## How Threads Work
+
+Every message in Sendook belongs to a thread:
+
+- **New conversations** automatically create a new thread
+- **Replies** are added to the existing thread
+- **Each thread** contains an ordered list of all messages in the conversation
+- **Thread detection** works automatically using email headers
+
+<Info>
+  Threads work similarly to email clients like Gmail, where related messages are grouped together in a conversation view.
+</Info>
+
+## Automatic Thread Creation
+
+### For Sent Emails
+
+When you send a new email, Sendook automatically creates a thread:
+
+```typescript
+const message = await client.inbox.message.send({
+  inboxId: "inbox_123",
+  to: ["customer@example.com"],
+  subject: "Welcome!",
+  text: "Thanks for signing up.",
+  html: "<p>Thanks for signing up.</p>"
+});
+
+console.log(message.threadId);
+// "thread_abc123" - automatically created
+```
+
+### For Received Emails
+
+When someone emails your inbox:
+
+1. **First email** - Creates a new thread
+2. **Reply to your email** - Added to existing thread (detected via email headers)
+3. **New subject** - Creates a new thread
+
+```typescript
+// Webhook payload for received email
+{
+  "event": "message.received",
+  "payload": {
+    "id": "msg_789",
+    "threadId": "thread_abc123", // Automatically assigned
+    "from": "customer@example.com",
+    "subject": "Re: Welcome!",
+    // ...
+  }
+}
+```
+
+## Thread Detection Logic
+
+Sendook uses email headers to detect replies and maintain threads:
+
+1. **References header** - Contains the message ID of the original email
+2. **In-Reply-To header** - References the direct parent message
+3. **Subject matching** - Checks for "Re:" prefix and subject similarity
+
+When a reply is detected:
+- The message is added to the existing thread
+- The thread's `messages` array is updated
+- The `threadId` remains the same
+
+<Note>
+  Thread detection works automatically—you don't need to manually specify thread IDs when sending replies.
+</Note>
+
+## Retrieving Threads
+
+### List All Threads
+
+Get all threads for an inbox:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const threads = await client.inbox.thread.list("inbox_123");
+
+console.log(threads);
+// [
+//   {
+//     id: "thread_abc123",
+//     inboxId: "inbox_123",
+//     messages: ["msg_001", "msg_002", "msg_003"],
+//     createdAt: "2024-01-01T12:00:00.000Z",
+//     updatedAt: "2024-01-01T14:30:00.000Z"
+//   }
+// ]
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/inboxes/inbox_123/threads \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+### Get a Specific Thread
+
+Retrieve a thread with all its messages:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const thread = await client.inbox.thread.get(
+  "inbox_123",
+  "thread_abc123"
+);
+
+console.log(thread);
+// {
+//   id: "thread_abc123",
+//   organizationId: "org_456",
+//   inboxId: "inbox_123",
+//   messages: [
+//     "msg_001", // Original message
+//     "msg_002", // First reply
+//     "msg_003"  // Second reply
+//   ],
+//   createdAt: "2024-01-01T12:00:00.000Z",
+//   updatedAt: "2024-01-01T14:30:00.000Z"
+// }
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/inboxes/inbox_123/threads/thread_abc123 \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+<Tip>
+  The `messages` array contains message IDs in chronological order, making it easy to reconstruct the conversation timeline.
+</Tip>
+
+## Reconstructing Conversations
+
+To display a full conversation, combine thread and message data:
+
+```typescript
+// 1. Get the thread
+const thread = await client.inbox.thread.get(
+  "inbox_123",
+  "thread_abc123"
+);
+
+// 2. Fetch each message
+const messages = await Promise.all(
+  thread.messages.map(messageId =>
+    client.inbox.message.get("inbox_123", messageId)
+  )
+);
+
+// 3. Display the conversation
+messages.forEach(message => {
+  console.log(`From: ${message.from}`);
+  console.log(`Date: ${message.createdAt}`);
+  console.log(`Subject: ${message.subject}`);
+  console.log(`Content: ${message.text}`);
+  console.log("---");
+});
+```
+
+## Thread Properties
+
+Each thread has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | string | Unique identifier for the thread |
+| `organizationId` | string | ID of the organization |
+| `inboxId` | string | ID of the inbox this thread belongs to |
+| `messages` | string[] | Array of message IDs in chronological order |
+| `createdAt` | string | ISO 8601 timestamp of thread creation |
+| `updatedAt` | string | ISO 8601 timestamp of last message added |
+
+## Use Cases
+
+<AccordionGroup>
+  <Accordion title="Customer Support Conversations">
+    Track entire support conversations from initial inquiry to resolution. Display all messages in a thread to support agents for context.
+    
+    ```typescript
+    // When a customer replies
+    const { payload: message } = webhookData;
+    
+    // Get full conversation history
+    const thread = await client.inbox.thread.get(
+      message.inboxId,
+      message.threadId
+    );
+    
+    // Show agent all previous messages for context
+    ```
+  </Accordion>
+  
+  <Accordion title="Email Thread Analytics">
+    Analyze conversation patterns like average thread length, response times, and resolution rates.
+    
+    ```typescript
+    const threads = await client.inbox.thread.list("inbox_123");
+    
+    const averageThreadLength = threads.reduce(
+      (sum, thread) => sum + thread.messages.length,
+      0
+    ) / threads.length;
+    
+    console.log(`Average messages per thread: ${averageThreadLength}`);
+    ```
+  </Accordion>
+  
+  <Accordion title="Conversation State Management">
+    Track the status of conversations (open, pending, resolved) by associating metadata with thread IDs in your database.
+    
+    ```typescript
+    // Your database schema
+    {
+      threadId: "thread_abc123",
+      status: "pending",
+      assignedTo: "agent_456",
+      lastResponseAt: "2024-01-01T14:30:00Z"
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Auto-Reply Context">
+    Use thread history to generate contextual auto-replies with AI.
+    
+    ```typescript
+    app.post("/webhooks/email", async (req, res) => {
+      const { payload: message } = req.body;
+      
+      // Get conversation history
+      const thread = await client.inbox.thread.get(
+        message.inboxId,
+        message.threadId
+      );
+      
+      const previousMessages = await Promise.all(
+        thread.messages.map(id =>
+          client.inbox.message.get(message.inboxId, id)
+        )
+      );
+      
+      // Generate AI reply with full context
+      const reply = await generateAIReply(previousMessages);
+      
+      // Send contextual reply
+      await client.inbox.message.reply({
+        inboxId: message.inboxId,
+        messageId: message.id,
+        text: reply,
+        html: reply
+      });
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Working with Replies
+
+When you reply to a message, it's automatically added to the thread:
+
+```typescript
+// Original message creates a thread
+const originalMessage = await client.inbox.message.send({
+  inboxId: "inbox_123",
+  to: ["customer@example.com"],
+  subject: "Order Confirmation",
+  text: "Your order has been confirmed.",
+  html: "<p>Your order has been confirmed.</p>"
+});
+
+console.log(originalMessage.threadId); // "thread_abc123"
+
+// When customer replies, the webhook includes the same threadId
+// webhookPayload.payload.threadId === "thread_abc123"
+
+// Your reply is added to the same thread
+await client.inbox.message.reply({
+  inboxId: "inbox_123",
+  messageId: webhookPayload.payload.id,
+  text: "Thanks for your reply!",
+  html: "<p>Thanks for your reply!</p>"
+});
+
+// All three messages now share the same threadId
+```
+
+## Thread Lifecycle
+
+1. **Creation** - A new message creates a new thread
+2. **Growth** - Replies are added to the thread's `messages` array
+3. **Persistence** - Threads exist permanently (not automatically deleted)
+4. **No deletion endpoint** - Currently, threads cannot be manually deleted
+
+<Note>
+  Threads are created and updated automatically. There's no API to manually create or delete threads.
+</Note>
+
+## Best Practices
+
+<Tip>
+  **Store thread IDs** - When building applications, store thread IDs alongside your own data (e.g., support tickets, order IDs) to easily reference conversations.
+</Tip>
+
+<Tip>
+  **Use threads for context** - When processing webhooks, fetch the thread to understand the full conversation context before responding.
+</Tip>
+
+<Tip>
+  **Monitor thread activity** - Track the `updatedAt` timestamp to identify active conversations vs. stale threads.
+</Tip>
+
+<Tip>
+  **Display chronologically** - The `messages` array is already in chronological order—use it directly to display conversations.
+</Tip>
+
+## Filtering Messages by Thread
+
+While there's no direct "filter by thread" endpoint, you can:
+
+1. Get the thread to retrieve message IDs
+2. Fetch only the messages you need
+
+```typescript
+// Get specific messages from a thread
+const thread = await client.inbox.thread.get("inbox_123", "thread_abc123");
+
+// Fetch only the last 3 messages
+const recentMessageIds = thread.messages.slice(-3);
+const recentMessages = await Promise.all(
+  recentMessageIds.map(id =>
+    client.inbox.message.get("inbox_123", id)
+  )
+);
+```
+
+## Thread Metadata
+
+Threads themselves don't store metadata like subject, participants, or status. To add custom metadata:
+
+```typescript
+// Store thread metadata in your database
+interface ThreadMetadata {
+  threadId: string;
+  inboxId: string;
+  subject: string;
+  participants: string[];
+  status: "open" | "pending" | "resolved";
+  priority: "low" | "medium" | "high";
+  tags: string[];
+  assignedTo?: string;
+}
+
+// Update when new messages arrive
+app.post("/webhooks/email", async (req, res) => {
+  const { payload: message } = req.body;
+  
+  await database.upsert("thread_metadata", {
+    threadId: message.threadId,
+    inboxId: message.inboxId,
+    subject: message.subject,
+    participants: [message.from, ...message.to],
+    lastMessageAt: message.createdAt,
+    status: "open"
+  });
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Sending Emails" icon="paper-plane" href="/features/sending-emails">
+    Learn how replies create and update threads
+  </Card>
+  
+  <Card title="Receiving Emails" icon="inbox" href="/features/receiving-emails">
+    Understand thread detection for incoming emails
+  </Card>
+  
+  <Card title="Webhooks" icon="webhook" href="/features/webhooks">
+    Use webhooks to track thread activity
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api/threads">
+    View complete thread API documentation
+  </Card>
+</CardGroup>

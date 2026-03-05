@@ -1,0 +1,463 @@
+---
+title: 'Webhooks'
+description: 'Configure webhooks to receive real-time notifications about events'
+icon: 'webhook'
+---
+
+Webhooks allow you to receive real-time HTTP notifications when events occur in your Sendook account. Configure webhook endpoints to listen for specific events and receive POST requests with event data.
+
+## Create Webhook
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/webhooks/sendook",
+    "events": ["message.received", "message.sent"]
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/webhooks', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    url: 'https://your-app.com/webhooks/sendook',
+    events: ['message.received', 'message.sent']
+  })
+});
+
+const webhook = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/webhooks',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'url': 'https://your-app.com/webhooks/sendook',
+        'events': ['message.received', 'message.sent']
+    }
+)
+
+webhook = response.json()
+```
+</CodeGroup>
+
+Create a new webhook endpoint to receive event notifications.
+
+### Request Body
+
+<ParamField body="url" type="string" required>
+  The HTTPS URL where webhook events will be sent.
+  
+  Must be a publicly accessible endpoint that can receive POST requests.
+  
+  Example: `"https://your-app.com/webhooks/sendook"`
+</ParamField>
+
+<ParamField body="events" type="string[]" required>
+  Array of event types to subscribe to. At least one event is required.
+  
+  Available events:
+  - `inbox.created` - Inbox was created
+  - `inbox.deleted` - Inbox was deleted
+  - `inbox.updated` - Inbox was updated
+  - `message.sent` - Message was sent from an inbox
+  - `message.received` - Message was received in an inbox
+  - `message.delivered` - Message was successfully delivered
+  - `message.bounced` - Message bounced
+  - `message.complained` - Recipient marked message as spam
+  - `message.rejected` - Message was rejected by recipient server
+  
+  Example: `["message.received", "message.sent"]`
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the webhook.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The webhook endpoint URL.
+</ResponseField>
+
+<ResponseField name="events" type="string[]">
+  Array of event types this webhook is subscribed to.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the webhook was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the webhook was last updated.
+</ResponseField>
+
+---
+
+## List Webhooks
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/webhooks', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const webhooks = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/webhooks',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+webhooks = response.json()
+```
+</CodeGroup>
+
+Retrieve all webhooks configured for your organization.
+
+### Response
+
+Returns an array of webhook objects.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the webhook.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The webhook endpoint URL.
+</ResponseField>
+
+<ResponseField name="events" type="string[]">
+  Array of event types this webhook is subscribed to.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the webhook was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the webhook was last updated.
+</ResponseField>
+
+---
+
+## Get Webhook
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/webhooks/webhook_123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/webhooks/webhook_123', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const webhook = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/webhooks/webhook_123',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+webhook = response.json()
+```
+</CodeGroup>
+
+Retrieve a specific webhook by its ID.
+
+### Path Parameters
+
+<ParamField path="webhookId" type="string" required>
+  The unique identifier of the webhook to retrieve.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the webhook.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The webhook endpoint URL.
+</ResponseField>
+
+<ResponseField name="events" type="string[]">
+  Array of event types this webhook is subscribed to.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the webhook was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the webhook was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Webhook not found"` - The webhook doesn't exist or doesn't belong to your organization
+
+---
+
+## Test Webhook
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/webhooks/webhook_123/test \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/webhooks/webhook_123/test', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const result = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/webhooks/webhook_123/test',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+result = response.json()
+```
+</CodeGroup>
+
+Send a test webhook event to verify your endpoint is configured correctly.
+
+### Path Parameters
+
+<ParamField path="webhookId" type="string" required>
+  The unique identifier of the webhook to test.
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Returns `true` if the test event was queued successfully.
+</ResponseField>
+
+### Test Event Payload
+
+The test endpoint will send a `message.received` event with a sample payload:
+
+```json
+{
+  "event": "message.received",
+  "data": {
+    "test": "test"
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Error Responses
+
+**404 Not Found**
+- `"Webhook not found"` - The webhook doesn't exist or doesn't belong to your organization
+
+---
+
+## Delete Webhook
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/webhooks/webhook_123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/webhooks/webhook_123', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const deletedWebhook = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.sendook.com/v1/webhooks/webhook_123',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+deleted_webhook = response.json()
+```
+</CodeGroup>
+
+Delete a webhook endpoint.
+
+### Path Parameters
+
+<ParamField path="webhookId" type="string" required>
+  The unique identifier of the webhook to delete.
+</ParamField>
+
+### Response
+
+Returns the deleted webhook object.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the deleted webhook.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owned this webhook.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The webhook endpoint URL.
+</ResponseField>
+
+<ResponseField name="events" type="string[]">
+  Array of event types the webhook was subscribed to.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the webhook was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the webhook was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Webhook not found"` - The webhook doesn't exist or doesn't belong to your organization
+
+---
+
+## Webhook Event Format
+
+All webhook events are sent as POST requests to your configured URL with the following format:
+
+### Headers
+
+```
+Content-Type: application/json
+User-Agent: Sendook-Webhook/1.0
+```
+
+### Payload Structure
+
+```json
+{
+  "event": "message.received",
+  "data": {
+    "id": "msg_123",
+    "inboxId": "inbox_456",
+    "from": "sender@example.com",
+    "to": ["recipient@yourdomain.com"],
+    "subject": "Hello",
+    "text": "Message body",
+    "html": "<p>Message body</p>",
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+<ParamField body="event" type="string">
+  The type of event that occurred.
+</ParamField>
+
+<ParamField body="data" type="object">
+  The event payload. Structure varies by event type:
+  - Inbox events: Contains inbox object
+  - Message events: Contains message object
+</ParamField>
+
+<ParamField body="timestamp" type="string">
+  ISO 8601 timestamp of when the event occurred.
+</ParamField>
+
+### Responding to Webhooks
+
+Your endpoint should:
+1. Respond with a `200` status code within 5 seconds
+2. Process the event asynchronously if needed
+3. Return a `200` even if the event is not relevant to your application
+
+### Retry Logic
+
+If your endpoint fails or times out, Sendook will retry with exponential backoff:
+- Attempt 1: Immediate
+- Attempt 2: After 1 minute
+- Attempt 3: After 5 minutes
+- Attempt 4: After 30 minutes
+- Attempt 5: After 2 hours
+
+After 5 failed attempts, the webhook event is discarded.
+
+### Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use HTTPS" icon="lock">
+    Always use HTTPS URLs for webhook endpoints to ensure data is encrypted in transit.
+  </Accordion>
+  
+  <Accordion title="Validate Source" icon="shield-check">
+    Verify that webhook requests are coming from Sendook by checking the source IP or implementing signature verification.
+  </Accordion>
+  
+  <Accordion title="Idempotency" icon="repeat">
+    Process webhook events idempotently, as you may receive the same event multiple times due to retries.
+  </Accordion>
+</AccordionGroup>

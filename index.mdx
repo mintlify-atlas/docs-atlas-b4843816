@@ -1,97 +1,191 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: Sendook Documentation
+description: Email infrastructure for AI agents at scale
+mode: custom
 ---
 
-## Setting up
+<div className="bg-gradient-to-b from-[#0a0c0d] to-[#0f1117] dark:from-[#0a0c0d] dark:to-[#0f1117] py-20">
+  <div className="max-w-6xl mx-auto px-6 lg:px-8">
+    <div className="text-center">
+      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-100 dark:text-gray-100 mb-6">
+        Email Infrastructure for AI Agents
+      </h1>
+      <p className="text-lg sm:text-xl text-gray-400 dark:text-gray-400 max-w-2xl mx-auto mb-10">
+        Send and receive emails programmatically with webhooks, custom domains, and a powerful TypeScript SDK. Built for scale.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+        <a
+          href="/quickstart"
+          className="inline-block px-8 py-3.5 bg-[#2ecc71] hover:bg-[#27ae60] text-black font-semibold rounded-lg transition-colors no-underline"
+        >
+          Get Started
+        </a>
+        <a
+          href="/api/overview"
+          className="inline-block px-8 py-3.5 bg-[#2c2c2c] hover:bg-[#3a3a3a] text-white font-semibold rounded-lg border border-white/10 transition-colors no-underline"
+        >
+          API Reference
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Quick Start</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">Get up and running in minutes with Sendook</p>
+  
+  <Steps>
+    <Step title="Sign up and get your API key">
+      Create an account at [sendook.com](https://sendook.com) and generate your API key from the dashboard.
+      
+      <Note>
+        Your API key is used to authenticate all requests to the Sendook API. Keep it secure and never share it publicly.
+      </Note>
+    </Step>
+    
+    <Step title="Install the SDK or use the REST API">
+      Choose your preferred integration method:
+      
+      <CodeGroup>
+      ```bash npm
+      npm install @sendook/node
+      ```
+      
+      ```bash yarn
+      yarn add @sendook/node
+      ```
+      
+      ```bash pnpm
+      pnpm add @sendook/node
+      ```
+      </CodeGroup>
+      
+      Or use the REST API directly with any HTTP client.
+    </Step>
+    
+    <Step title="Create your first inbox and send an email">
+      Start sending and receiving emails programmatically:
+      
+      <Tabs>
+        <Tab title="TypeScript SDK">
+          ```typescript
+          import Sendook from "@sendook/node";
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+          const client = new Sendook("your_api_key");
 
-## Make it yours
+          // Create an inbox
+          const inbox = await client.inbox.create({
+            name: "support",
+            email: "support@sendook.com"
+          });
 
-Design a docs site that looks great and empowers your users.
+          // Send an email
+          await client.inbox.message.send({
+            inboxId: inbox.id,
+            to: ["user@example.com"],
+            subject: "Welcome to Sendook!",
+            text: "Thanks for signing up.",
+            html: "<p>Thanks for signing up.</p>"
+          });
+          ```
+        </Tab>
+        
+        <Tab title="cURL">
+          ```bash
+          # Create an inbox
+          curl -X POST https://api.sendook.com/v1/inboxes \
+            -H "Authorization: Bearer your_api_key" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "support",
+              "email": "support@sendook.com"
+            }'
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+          # Send an email
+          curl -X POST https://api.sendook.com/v1/inboxes/{inbox_id}/messages/send \
+            -H "Authorization: Bearer your_api_key" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "to": ["user@example.com"],
+              "subject": "Welcome to Sendook!",
+              "text": "Thanks for signing up.",
+              "html": "<p>Thanks for signing up.</p>"
+            }'
+          ```
+        </Tab>
+      </Tabs>
+    </Step>
+    
+    <Step title="Set up webhooks to receive emails">
+      Configure webhooks to handle incoming emails automatically:
+      
+      ```typescript
+      await client.webhook.create({
+        url: "https://your-app.com/webhooks/email",
+        events: ["message.received"]
+      });
+      ```
+      
+      Your webhook will receive parsed email data whenever a message arrives in your inbox.
+    </Step>
+  </Steps>
+</div>
 
-## Create beautiful pages
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Core Features</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">Everything you need to build email-powered AI agents</p>
+  
+  <CardGroup cols={2}>
+    <Card title="Send & Receive Emails" icon="envelope" href="/features/sending-emails">
+      Send transactional emails and receive inbound messages programmatically with full thread support.
+    </Card>
+    <Card title="Webhook Integration" icon="webhook" href="/features/webhooks">
+      Get real-time notifications for incoming emails, bounces, deliveries, and more.
+    </Card>
+    <Card title="Custom Domains" icon="globe" href="/features/custom-domains">
+      Use your own domain with automated DNS verification and configuration.
+    </Card>
+    <Card title="Thread Management" icon="comments" href="/features/threads">
+      Automatically organize emails into conversations with built-in thread tracking.
+    </Card>
+    <Card title="TypeScript SDK" icon="code" href="/sdk/installation">
+      Fully typed Node.js SDK with intuitive API for all Sendook features.
+    </Card>
+    <Card title="Self-Hosting" icon="server" href="/guides/self-hosting">
+      Deploy Sendook on your own infrastructure with Docker support.
+    </Card>
+  </CardGroup>
+</div>
 
-Everything you need to create world-class documentation.
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Explore Documentation</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">Dive deeper into Sendook's capabilities</p>
+  
+  <CardGroup cols={3}>
+    <Card title="API Overview" icon="book-open" href="/api/overview">
+      Complete REST API reference with all endpoints and parameters
+    </Card>
+    <Card title="Dashboard Guide" icon="grid" href="/guides/dashboard">
+      Manage your inboxes, domains, and webhooks through the web UI
+    </Card>
+    <Card title="Authentication" icon="key" href="/guides/authentication">
+      Learn about API keys, access tokens, and secure authentication
+    </Card>
+  </CardGroup>
+</div>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<div className="mt-20 mb-16 max-w-5xl mx-auto px-6">
+  <div className="bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-[#27272a] rounded-2xl p-8 sm:p-12 text-center">
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Ready to build with Sendook?</h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+      Start sending and receiving emails at scale. Create your free account and get your API key in minutes.
+    </p>
+    <a
+      href="/quickstart"
+      className="inline-block px-8 py-3.5 bg-[#2ecc71] hover:bg-[#27ae60] text-black font-semibold rounded-lg transition-colors no-underline"
+    >
+      Get Started Now
+    </a>
+  </div>
+</div>

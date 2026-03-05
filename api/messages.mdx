@@ -1,0 +1,565 @@
+---
+title: 'Messages'
+description: 'Send, receive, and manage email messages'
+icon: 'envelope'
+---
+
+## Send Message
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/inboxes/inbox_123/messages/send \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": ["recipient@example.com"],
+    "subject": "Hello from Sendook",
+    "text": "This is a plain text message.",
+    "html": "<p>This is an <strong>HTML</strong> message.</p>"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes/inbox_123/messages/send', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    to: ['recipient@example.com'],
+    subject: 'Hello from Sendook',
+    text: 'This is a plain text message.',
+    html: '<p>This is an <strong>HTML</strong> message.</p>'
+  })
+});
+
+const message = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/inboxes/inbox_123/messages/send',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'to': ['recipient@example.com'],
+        'subject': 'Hello from Sendook',
+        'text': 'This is a plain text message.',
+        'html': '<p>This is an <strong>HTML</strong> message.</p>'
+    }
+)
+
+message = response.json()
+```
+</CodeGroup>
+
+Send an email message from an inbox. This creates a new thread and sends the message.
+
+<Note>
+  Rate limited to 100 requests per hour per organization.
+</Note>
+
+### Path Parameters
+
+<ParamField path="inboxId" type="string" required>
+  The unique identifier of the inbox to send from.
+</ParamField>
+
+### Request Body
+
+<ParamField body="to" type="string[]" required>
+  Array of recipient email addresses.
+  
+  Example: `["recipient@example.com", "another@example.com"]`
+</ParamField>
+
+<ParamField body="cc" type="string[]" optional>
+  Array of CC recipient email addresses.
+</ParamField>
+
+<ParamField body="bcc" type="string[]" optional>
+  Array of BCC recipient email addresses.
+</ParamField>
+
+<ParamField body="subject" type="string" required>
+  Subject line of the email.
+</ParamField>
+
+<ParamField body="text" type="string" required>
+  Plain text version of the email body.
+</ParamField>
+
+<ParamField body="html" type="string" required>
+  HTML version of the email body.
+</ParamField>
+
+<ParamField body="labels" type="string[]" optional>
+  Custom labels to organize the message.
+  
+  Example: `["important", "customer-support"]`
+</ParamField>
+
+<ParamField body="attachments" type="array" optional>
+  Array of attachment objects.
+  
+  <Expandable title="Attachment Object">
+    <ParamField body="content" type="string" required>
+      Base64-encoded content of the attachment.
+    </ParamField>
+    
+    <ParamField body="name" type="string" optional>
+      Filename of the attachment.
+      
+      Example: `"document.pdf"`
+    </ParamField>
+    
+    <ParamField body="contentType" type="string" optional>
+      MIME type of the attachment.
+      
+      Example: `"application/pdf"`
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the message.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this message.
+</ResponseField>
+
+<ResponseField name="inboxId" type="string">
+  ID of the inbox this message belongs to.
+</ResponseField>
+
+<ResponseField name="threadId" type="string">
+  ID of the thread this message belongs to.
+</ResponseField>
+
+<ResponseField name="fromInboxId" type="string">
+  ID of the inbox the message was sent from.
+</ResponseField>
+
+<ResponseField name="from" type="string">
+  Email address the message was sent from.
+</ResponseField>
+
+<ResponseField name="to" type="string[]">
+  Array of recipient email addresses.
+</ResponseField>
+
+<ResponseField name="cc" type="string[]">
+  Array of CC recipient email addresses.
+</ResponseField>
+
+<ResponseField name="bcc" type="string[]">
+  Array of BCC recipient email addresses.
+</ResponseField>
+
+<ResponseField name="subject" type="string">
+  Subject line of the email.
+</ResponseField>
+
+<ResponseField name="text" type="string">
+  Plain text version of the email body.
+</ResponseField>
+
+<ResponseField name="html" type="string">
+  HTML version of the email body.
+</ResponseField>
+
+<ResponseField name="labels" type="string[]">
+  Custom labels assigned to the message.
+</ResponseField>
+
+<ResponseField name="attachments" type="array">
+  Array of attachment objects.
+</ResponseField>
+
+<ResponseField name="externalMessageId" type="string">
+  External message ID from the email service provider (AWS SES).
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Status of the message. One of: `sent`, `received`, `delivered`, `bounced`, `complained`, `rejected`.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the message was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the message was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Inbox not found"` - The inbox doesn't exist or doesn't belong to your organization
+
+**429 Too Many Requests**
+- Rate limit exceeded (100 requests per hour)
+
+### Webhook Events
+
+Sending a message triggers the following webhook event:
+- `message.sent` - Fired when the message is successfully sent
+
+---
+
+## Reply to Message
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456/reply \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Thank you for your message.",
+    "html": "<p>Thank you for your message.</p>"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456/reply', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    text: 'Thank you for your message.',
+    html: '<p>Thank you for your message.</p>'
+  })
+});
+
+const reply = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456/reply',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'text': 'Thank you for your message.',
+        'html': '<p>Thank you for your message.</p>'
+    }
+)
+
+reply = response.json()
+```
+</CodeGroup>
+
+Reply to an existing message. The reply is automatically added to the same thread and sent to the original sender.
+
+<Note>
+  Rate limited to 100 requests per hour per organization.
+</Note>
+
+### Path Parameters
+
+<ParamField path="inboxId" type="string" required>
+  The unique identifier of the inbox to send from.
+</ParamField>
+
+<ParamField path="messageId" type="string" required>
+  The unique identifier of the message to reply to.
+</ParamField>
+
+### Request Body
+
+<ParamField body="text" type="string" required>
+  Plain text version of the reply.
+</ParamField>
+
+<ParamField body="html" type="string" required>
+  HTML version of the reply.
+</ParamField>
+
+### Response
+
+Returns a message object with the same fields as the Send Message endpoint.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the reply message.
+</ResponseField>
+
+<ResponseField name="threadId" type="string">
+  ID of the thread (same as the original message).
+</ResponseField>
+
+<ResponseField name="from" type="string">
+  Email address the reply was sent from (the inbox email).
+</ResponseField>
+
+<ResponseField name="to" type="string[]">
+  Array containing the original sender's email address.
+</ResponseField>
+
+<ResponseField name="subject" type="string">
+  Subject line prefixed with "Re: ".
+</ResponseField>
+
+<ResponseField name="text" type="string">
+  Plain text version of the reply.
+</ResponseField>
+
+<ResponseField name="html" type="string">
+  HTML version of the reply.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Inbox not found"` - The inbox doesn't exist or doesn't belong to your organization
+- `"Message not found"` - The message doesn't exist or doesn't belong to your organization
+
+**429 Too Many Requests**
+- Rate limit exceeded (100 requests per hour)
+
+### Webhook Events
+
+Replying to a message triggers the following webhook event:
+- `message.sent` - Fired when the reply is successfully sent
+
+---
+
+## List Messages
+
+<CodeGroup>
+```bash cURL
+curl "https://api.sendook.com/v1/inboxes/inbox_123/messages?query=important" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes/inbox_123/messages?query=important', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const messages = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/inboxes/inbox_123/messages',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'},
+    params={'query': 'important'}
+)
+
+messages = response.json()
+```
+</CodeGroup>
+
+Retrieve all messages in an inbox with optional search filtering.
+
+### Path Parameters
+
+<ParamField path="inboxId" type="string" required>
+  The unique identifier of the inbox.
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="query" type="string" optional>
+  Search query to filter messages. Searches across subject, text, and sender fields.
+  
+  Example: `"important"`
+</ParamField>
+
+### Response
+
+Returns an array of message objects.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the message.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this message.
+</ResponseField>
+
+<ResponseField name="inboxId" type="string">
+  ID of the inbox this message belongs to.
+</ResponseField>
+
+<ResponseField name="threadId" type="string">
+  ID of the thread this message belongs to.
+</ResponseField>
+
+<ResponseField name="from" type="string">
+  Email address the message was sent from.
+</ResponseField>
+
+<ResponseField name="to" type="string[]">
+  Array of recipient email addresses.
+</ResponseField>
+
+<ResponseField name="subject" type="string">
+  Subject line of the email.
+</ResponseField>
+
+<ResponseField name="text" type="string">
+  Plain text version of the email body.
+</ResponseField>
+
+<ResponseField name="html" type="string">
+  HTML version of the email body.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Status of the message.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the message was created.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Inbox not found"` - The inbox doesn't exist or doesn't belong to your organization
+
+---
+
+## Get Message
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const message = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_456',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+message = response.json()
+```
+</CodeGroup>
+
+Retrieve a specific message by its ID.
+
+### Path Parameters
+
+<ParamField path="inboxId" type="string" required>
+  The unique identifier of the inbox.
+</ParamField>
+
+<ParamField path="messageId" type="string" required>
+  The unique identifier of the message to retrieve.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the message.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this message.
+</ResponseField>
+
+<ResponseField name="inboxId" type="string">
+  ID of the inbox this message belongs to.
+</ResponseField>
+
+<ResponseField name="threadId" type="string">
+  ID of the thread this message belongs to.
+</ResponseField>
+
+<ResponseField name="fromInboxId" type="string">
+  ID of the inbox the message was sent from (if applicable).
+</ResponseField>
+
+<ResponseField name="from" type="string">
+  Email address the message was sent from.
+</ResponseField>
+
+<ResponseField name="toInboxId" type="string">
+  ID of the inbox the message was sent to (if applicable).
+</ResponseField>
+
+<ResponseField name="to" type="string[]">
+  Array of recipient email addresses.
+</ResponseField>
+
+<ResponseField name="cc" type="string[]">
+  Array of CC recipient email addresses.
+</ResponseField>
+
+<ResponseField name="bcc" type="string[]">
+  Array of BCC recipient email addresses.
+</ResponseField>
+
+<ResponseField name="subject" type="string">
+  Subject line of the email.
+</ResponseField>
+
+<ResponseField name="text" type="string">
+  Plain text version of the email body.
+</ResponseField>
+
+<ResponseField name="html" type="string">
+  HTML version of the email body.
+</ResponseField>
+
+<ResponseField name="labels" type="string[]">
+  Custom labels assigned to the message.
+</ResponseField>
+
+<ResponseField name="attachments" type="array">
+  Array of attachment objects with `content`, `name`, and `contentType` fields.
+</ResponseField>
+
+<ResponseField name="externalMessageId" type="string">
+  External message ID from the email service provider.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Status of the message. One of: `sent`, `received`, `delivered`, `bounced`, `complained`, `rejected`.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the message was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the message was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Message not found"` - The message doesn't exist or doesn't belong to your organization

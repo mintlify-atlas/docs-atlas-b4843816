@@ -1,0 +1,546 @@
+---
+title: 'Domains'
+description: 'Manage custom email domains for your organization'
+icon: 'globe'
+---
+
+## Create Domain
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/domains \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "yourdomain.com"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/domains', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'yourdomain.com'
+  })
+});
+
+const domain = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/domains',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={'name': 'yourdomain.com'}
+)
+
+domain = response.json()
+```
+</CodeGroup>
+
+Add a custom domain to your organization. After creating a domain, you must configure DNS records and verify the domain before using it with inboxes.
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  The domain name. Must be a valid domain format.
+  
+  Example: `"yourdomain.com"`
+  
+  Valid formats:
+  - `domain.com`
+  - `subdomain.domain.com`
+  - `mail.company.co.uk`
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the domain.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this domain.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The domain name.
+</ResponseField>
+
+<ResponseField name="verified" type="boolean">
+  Whether the domain has been verified. Will be `false` initially.
+</ResponseField>
+
+<ResponseField name="records" type="array">
+  Array of DNS record verification status objects.
+  
+  <Expandable title="Record Object">
+    <ResponseField name="type" type="string">
+      DNS record type (e.g., "MX", "TXT", "CNAME").
+    </ResponseField>
+    
+    <ResponseField name="value" type="string">
+      The DNS record value.
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Verification status of this record.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the domain was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the domain was last updated.
+</ResponseField>
+
+### Error Responses
+
+**400 Bad Request**
+- `"Invalid domain name format"` - The domain name format is invalid
+
+---
+
+## List Domains
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/domains \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/domains', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const domains = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/domains',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+domains = response.json()
+```
+</CodeGroup>
+
+Retrieve all domains for your organization.
+
+### Response
+
+Returns an array of domain objects.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the domain.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this domain.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The domain name.
+</ResponseField>
+
+<ResponseField name="verified" type="boolean">
+  Whether the domain has been verified.
+</ResponseField>
+
+<ResponseField name="records" type="array">
+  Array of DNS record verification status objects.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the domain was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the domain was last updated.
+</ResponseField>
+
+---
+
+## Get Domain
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/domains/yourdomain.com \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/domains/yourdomain.com', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const domain = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/domains/yourdomain.com',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+domain = response.json()
+```
+</CodeGroup>
+
+Retrieve a specific domain by its name.
+
+### Path Parameters
+
+<ParamField path="domainId" type="string" required>
+  The domain name (used as the identifier).
+  
+  Example: `"yourdomain.com"`
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the domain.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this domain.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The domain name.
+</ResponseField>
+
+<ResponseField name="verified" type="boolean">
+  Whether the domain has been verified.
+</ResponseField>
+
+<ResponseField name="records" type="array">
+  Array of DNS record verification status objects.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the domain was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the domain was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Domain not found"` - The domain doesn't exist or doesn't belong to your organization
+
+---
+
+## Get DNS Records
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/domains/yourdomain.com/dns \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/domains/yourdomain.com/dns', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const dnsRecords = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/domains/yourdomain.com/dns',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+dns_records = response.json()
+```
+</CodeGroup>
+
+Get the required DNS records that need to be configured for domain verification. Add these records to your domain's DNS settings.
+
+### Path Parameters
+
+<ParamField path="domainId" type="string" required>
+  The domain name.
+  
+  Example: `"yourdomain.com"`
+</ParamField>
+
+### Response
+
+Returns an array of DNS record objects that must be added to your domain.
+
+<ResponseField name="type" type="string">
+  The DNS record type.
+  
+  Values: `MX`, `TXT`, `CNAME`
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The DNS record name/host.
+  
+  - `@` represents the root domain
+  - For subdomains, this will be the subdomain prefix
+  - For DKIM records, this will be a specific token subdomain
+</ResponseField>
+
+<ResponseField name="value" type="string">
+  The DNS record value/target.
+</ResponseField>
+
+<ResponseField name="priority" type="number">
+  Priority value for MX records.
+  
+  Only present for MX records.
+</ResponseField>
+
+### DNS Records Explained
+
+<AccordionGroup>
+  <Accordion title="MX Record" icon="envelope">
+    **Purpose**: Routes incoming emails to AWS SES
+    
+    **Configuration**:
+    - Type: `MX`
+    - Name: `@` (or subdomain prefix)
+    - Value: `inbound-smtp.us-east-2.amazonaws.com`
+    - Priority: `10`
+  </Accordion>
+  
+  <Accordion title="SPF Record" icon="shield-check">
+    **Purpose**: Prevents email spoofing by authorizing AWS SES to send emails from your domain
+    
+    **Configuration**:
+    - Type: `TXT`
+    - Name: `@` (or subdomain prefix)
+    - Value: `v=spf1 include:amazonses.com ~all`
+  </Accordion>
+  
+  <Accordion title="DMARC Record" icon="shield-halved">
+    **Purpose**: Defines how receiving servers should handle emails that fail authentication
+    
+    **Configuration**:
+    - Type: `TXT`
+    - Name: `_dmarc` (or `_dmarc.subdomain`)
+    - Value: `v=DMARC1; p=reject;`
+  </Accordion>
+  
+  <Accordion title="DKIM Records" icon="key">
+    **Purpose**: Digital signature verification to prove emails are authentic and unmodified
+    
+    **Configuration**:
+    - Type: `CNAME`
+    - Name: `[token]._domainkey.yourdomain.com`
+    - Value: `[token].dkim.amazonses.com`
+    
+    Multiple DKIM records will be provided (typically 3).
+  </Accordion>
+</AccordionGroup>
+
+### Error Responses
+
+**400 Bad Request**
+- `"Failed to get DKIM attributes"` - Unable to retrieve DKIM tokens from AWS SES
+
+**404 Not Found**
+- `"Domain not found"` - The domain doesn't exist or doesn't belong to your organization
+
+---
+
+## Verify Domain
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/domains/yourdomain.com/verify \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/domains/yourdomain.com/verify', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const verifiedDomain = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/domains/yourdomain.com/verify',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+verified_domain = response.json()
+```
+</CodeGroup>
+
+Verify that the required DNS records have been properly configured. This checks AWS SES to confirm domain verification status.
+
+<Note>
+  DNS changes can take up to 48 hours to propagate. If verification fails, wait and try again later.
+</Note>
+
+### Path Parameters
+
+<ParamField path="domainId" type="string" required>
+  The domain name to verify.
+  
+  Example: `"yourdomain.com"`
+</ParamField>
+
+### Response
+
+Returns the updated domain object with verification status.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the domain.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this domain.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The domain name.
+</ResponseField>
+
+<ResponseField name="verified" type="boolean">
+  Whether the domain has been successfully verified.
+  
+  Will be `true` if verification succeeded, `false` otherwise.
+</ResponseField>
+
+<ResponseField name="records" type="array">
+  Array of DNS record verification status objects showing which records passed or failed verification.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the domain was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the domain was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Domain not found"` - The domain doesn't exist or doesn't belong to your organization
+
+---
+
+## Delete Domain
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/domains/yourdomain.com \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/domains/yourdomain.com', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const deletedDomain = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.sendook.com/v1/domains/yourdomain.com',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+deleted_domain = response.json()
+```
+</CodeGroup>
+
+Delete a custom domain from your organization.
+
+<Warning>
+  Deleting a domain will prevent any inboxes using this domain from sending or receiving emails. Make sure to update or delete affected inboxes first.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="domainId" type="string" required>
+  The domain name to delete.
+  
+  Example: `"yourdomain.com"`
+</ParamField>
+
+### Response
+
+Returns the deleted domain object.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the deleted domain.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owned this domain.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The domain name.
+</ResponseField>
+
+<ResponseField name="verified" type="boolean">
+  Whether the domain was verified before deletion.
+</ResponseField>
+
+<ResponseField name="records" type="array">
+  Array of DNS record verification status objects.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the domain was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the domain was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Domain not found"` - The domain doesn't exist or doesn't belong to your organization

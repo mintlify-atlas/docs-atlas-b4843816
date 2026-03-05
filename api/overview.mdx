@@ -1,0 +1,209 @@
+---
+title: 'API Overview'
+description: 'Learn about the Sendook REST API, base URL, versioning, rate limits, and response formats'
+---
+
+## Introduction
+
+The Sendook API provides programmatic access to send and receive emails at scale. Built on REST principles, the API uses standard HTTP response codes, authentication, and verbs.
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://api.sendook.com
+```
+
+For self-hosted installations, the API runs on port **8006** by default:
+
+```
+http://localhost:8006
+```
+
+## API Versioning
+
+The Sendook API uses URL-based versioning. All endpoints are prefixed with the version number:
+
+```
+https://api.sendook.com/v1/{resource}
+```
+
+The current stable version is **v1**.
+
+<Note>
+  All v1 endpoints require authentication via API key. See the [Authentication](/api/authentication) guide for details.
+</Note>
+
+## Rate Limits
+
+To ensure service reliability and fair usage, the Sendook API implements rate limiting:
+
+### Message Sending
+
+- **100 requests per hour** per organization for message send operations
+- Rate limit applies to:
+  - `POST /v1/inboxes/{inboxId}/messages/send`
+  - `POST /v1/inboxes/{inboxId}/messages/{messageId}/reply`
+
+### Rate Limit Headers
+
+Rate limit information is included in the response headers using the `draft-7` standard:
+
+```http
+RateLimit-Limit: 100
+RateLimit-Remaining: 95
+RateLimit-Reset: 1677721600
+```
+
+### Rate Limit Exceeded
+
+When you exceed the rate limit, the API returns a `429 Too Many Requests` response:
+
+```json
+{
+  "error": "Too many requests, please try again later."
+}
+```
+
+<Tip>
+  Rate limits are stored in Redis and reset on an hourly basis. Plan your integration accordingly to stay within limits.
+</Tip>
+
+## Response Format
+
+All API responses are returned as JSON with appropriate HTTP status codes.
+
+### Success Responses
+
+Successful requests return the resource or an array of resources:
+
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "name": "Support Inbox",
+  "email": "support@sendook.com",
+  "organizationId": "507f191e810c19729de860ea",
+  "createdAt": "2024-03-01T10:00:00.000Z",
+  "updatedAt": "2024-03-01T10:00:00.000Z"
+}
+```
+
+### Error Responses
+
+Errors return a JSON object with an `error` field describing the issue:
+
+```json
+{
+  "error": "Inbox not found"
+}
+```
+
+### HTTP Status Codes
+
+The API uses standard HTTP status codes:
+
+| Code | Description |
+|------|-------------|
+| `200` | Success - Request completed successfully |
+| `201` | Created - Resource created successfully |
+| `400` | Bad Request - Invalid request parameters |
+| `401` | Unauthorized - Missing or invalid API key |
+| `404` | Not Found - Resource does not exist |
+| `429` | Too Many Requests - Rate limit exceeded |
+| `500` | Internal Server Error - Something went wrong on the server |
+
+## Request Format
+
+All `POST` and `PUT` requests should include a `Content-Type: application/json` header.
+
+### Example Request
+
+```bash
+curl -X POST https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Support",
+    "email": "support@sendook.com"
+  }'
+```
+
+## Pagination
+
+Some endpoints that return lists support pagination through query parameters:
+
+```
+GET /v1/inboxes?page=1&per=20
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | Page number (default: 1) |
+| `per` | integer | Items per page (default: 20) |
+
+## Request Body Limits
+
+The API accepts request bodies up to **20MB** for most endpoints. This accommodates large email content and attachments.
+
+<Warning>
+  Webhook endpoints have different body size limits. The Stripe and Resend webhook endpoints handle raw request bodies for signature verification.
+</Warning>
+
+## CORS Support
+
+The API supports Cross-Origin Resource Sharing (CORS) with credentials:
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+```
+
+This allows web applications to make direct API requests from the browser.
+
+## Health Check
+
+You can check API health status using the health endpoint:
+
+```bash
+curl https://api.sendook.com/health
+```
+
+**Response:**
+
+```json
+{
+  "healthy": true,
+  "environment": "production"
+}
+```
+
+## SDK Support
+
+While you can use the REST API directly, Sendook provides official SDKs for easier integration:
+
+<CardGroup cols={2}>
+  <Card title="Node.js SDK" icon="node-js" href="/sdk/installation">
+    Official TypeScript/JavaScript SDK
+  </Card>
+  <Card title="Python SDK" icon="python" href="https://github.com/getrupt/sendook">
+    Coming soon - contributions welcome
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Learn how to authenticate your API requests
+  </Card>
+  <Card title="Inboxes" icon="inbox" href="/api/inboxes">
+    Create and manage email inboxes
+  </Card>
+  <Card title="Send Messages" icon="paper-plane" href="/api/messages">
+    Send emails via the API
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api/webhooks">
+    Receive email events in real-time
+  </Card>
+</CardGroup>

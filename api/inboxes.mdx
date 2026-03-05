@@ -1,0 +1,342 @@
+---
+title: 'Inboxes'
+description: 'Manage email inboxes for your organization'
+icon: 'inbox'
+---
+
+## Create Inbox
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Support Inbox",
+    "email": "support@yourdomain.com"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Support Inbox',
+    email: 'support@yourdomain.com'
+  })
+});
+
+const inbox = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/inboxes',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'name': 'Support Inbox',
+        'email': 'support@yourdomain.com'
+    }
+)
+
+inbox = response.json()
+```
+</CodeGroup>
+
+Create a new inbox for receiving and sending emails.
+
+### Request Body
+
+<ParamField body="name" type="string" optional>
+  A friendly name for the inbox. Used as the display name when sending emails.
+  
+  Example: `"Support Inbox"`
+</ParamField>
+
+<ParamField body="email" type="string" optional>
+  The email address for the inbox. If not provided, a random email address will be generated using the default domain.
+  
+  **Important**: Custom domains must be verified before use. If using a custom domain, ensure it's added and verified in your account first.
+  
+  Example: `"support@yourdomain.com"`
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the inbox.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this inbox.
+</ResponseField>
+
+<ResponseField name="domainId" type="string">
+  ID of the custom domain associated with this inbox (if using a custom domain).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The friendly name of the inbox.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The email address of the inbox.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the inbox was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the inbox was last updated.
+</ResponseField>
+
+### Error Responses
+
+<ResponseField name="error" type="string">
+  Error message describing what went wrong.
+</ResponseField>
+
+**400 Bad Request** - Invalid request parameters
+- `"Invalid email address"` - The email format is invalid
+- `"Inbox with this email already exists"` - An inbox with this email already exists
+
+**404 Not Found** - Resource not found
+- `"Invalid domain name"` - The custom domain doesn't exist or isn't verified
+
+---
+
+## List Inboxes
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const inboxes = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/inboxes',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+inboxes = response.json()
+```
+</CodeGroup>
+
+Retrieve all inboxes for your organization.
+
+### Response
+
+Returns an array of inbox objects. Each inbox object contains:
+
+<ResponseField name="id" type="string">
+  Unique identifier for the inbox.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this inbox.
+</ResponseField>
+
+<ResponseField name="domainId" type="string">
+  ID of the custom domain associated with this inbox (if applicable).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The friendly name of the inbox.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The email address of the inbox.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the inbox was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the inbox was last updated.
+</ResponseField>
+
+---
+
+## Get Inbox
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/inboxes/inbox_123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes/inbox_123', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const inbox = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/inboxes/inbox_123',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+inbox = response.json()
+```
+</CodeGroup>
+
+Retrieve a specific inbox by its ID.
+
+### Path Parameters
+
+<ParamField path="inboxId" type="string" required>
+  The unique identifier of the inbox to retrieve.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the inbox.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owns this inbox.
+</ResponseField>
+
+<ResponseField name="domainId" type="string">
+  ID of the custom domain associated with this inbox (if applicable).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The friendly name of the inbox.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The email address of the inbox.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the inbox was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the inbox was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Inbox not found"` - The inbox doesn't exist or doesn't belong to your organization
+
+---
+
+## Delete Inbox
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/inboxes/inbox_123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/inboxes/inbox_123', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const deletedInbox = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.sendook.com/v1/inboxes/inbox_123',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+deleted_inbox = response.json()
+```
+</CodeGroup>
+
+Delete an inbox and all its associated messages.
+
+<Warning>
+  This action is permanent and cannot be undone. All messages in the inbox will be deleted.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="inboxId" type="string" required>
+  The unique identifier of the inbox to delete.
+</ParamField>
+
+### Response
+
+Returns the deleted inbox object.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the deleted inbox.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization that owned this inbox.
+</ResponseField>
+
+<ResponseField name="domainId" type="string">
+  ID of the custom domain associated with this inbox (if applicable).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The friendly name of the inbox.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The email address of the inbox.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the inbox was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the inbox was last updated.
+</ResponseField>
+
+### Error Responses
+
+**404 Not Found**
+- `"Inbox not found"` - The inbox doesn't exist or doesn't belong to your organization
+
+### Webhook Events
+
+Deleting an inbox triggers the following webhook events:
+- `inbox.deleted` - Fired when the inbox is successfully deleted

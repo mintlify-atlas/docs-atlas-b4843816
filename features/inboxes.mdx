@@ -1,0 +1,199 @@
+---
+title: "Inboxes"
+description: "Create and manage email inboxes for sending and receiving emails"
+---
+
+## Overview
+
+Inboxes are the core of Sendook. Each inbox has a unique email address that can send and receive emails. You can create inboxes with either `@sendook.com` addresses or custom domain addresses.
+
+## Creating an Inbox
+
+### Using sendook.com Domain
+
+The simplest way to create an inbox is using a `@sendook.com` email address. No verification is required.
+
+<CodeGroup>
+
+```typescript Node.js SDK
+import Sendook from "@sendook/node";
+
+const client = new Sendook("your_api_key");
+
+// Create an inbox with sendook.com domain
+const inbox = await client.inbox.create({
+  name: "support",
+  email: "support@sendook.com"
+});
+
+console.log(inbox);
+// {
+//   id: "inbox_123",
+//   organizationId: "org_456",
+//   name: "support",
+//   email: "support@sendook.com",
+//   createdAt: "2024-01-01T00:00:00.000Z",
+//   updatedAt: "2024-01-01T00:00:00.000Z"
+// }
+```
+
+```bash cURL
+curl -X POST https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "support",
+    "email": "support@sendook.com"
+  }'
+```
+
+</CodeGroup>
+
+### Auto-Generated Email
+
+If you don't specify an email address, Sendook will automatically generate one based on the name:
+
+```typescript
+const inbox = await client.inbox.create({
+  name: "support"
+});
+// Email will be auto-generated: support-xyz123@sendook.com
+```
+
+### Using Custom Domains
+
+To use your own domain, you first need to add and verify it. See [Custom Domains](/features/custom-domains) for setup instructions.
+
+```typescript
+// After verifying your custom domain
+const inbox = await client.inbox.create({
+  name: "hello",
+  email: "hello@yourdomain.com"
+});
+```
+
+<Warning>
+  Your custom domain must be verified before creating inboxes with it. The API will return a 404 error if the domain is not verified.
+</Warning>
+
+## Listing Inboxes
+
+Retrieve all inboxes in your organization:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const inboxes = await client.inbox.list();
+
+console.log(inboxes);
+// [
+//   { id: "inbox_123", email: "support@sendook.com", ... },
+//   { id: "inbox_456", email: "hello@yourdomain.com", ... }
+// ]
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+## Retrieving an Inbox
+
+Get details for a specific inbox:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const inbox = await client.inbox.get("inbox_123");
+
+console.log(inbox);
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/inboxes/inbox_123 \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+## Deleting an Inbox
+
+Delete an inbox and all its messages:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+await client.inbox.delete("inbox_123");
+```
+
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/inboxes/inbox_123 \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+<Warning>
+  Deleting an inbox permanently removes all associated messages and threads. This action cannot be undone.
+</Warning>
+
+## Inbox Properties
+
+Each inbox has the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | string | Unique identifier for the inbox |
+| `organizationId` | string | ID of the organization that owns this inbox |
+| `domainId` | string (optional) | ID of the custom domain (if using custom domain) |
+| `name` | string (optional) | Human-readable name for the inbox |
+| `email` | string | Email address for this inbox |
+| `createdAt` | string | ISO 8601 timestamp of when the inbox was created |
+| `updatedAt` | string | ISO 8601 timestamp of when the inbox was last updated |
+
+## Webhooks
+
+Inboxes trigger the following webhook events:
+
+- `inbox.created` - When a new inbox is created
+- `inbox.deleted` - When an inbox is deleted
+
+See [Webhooks](/features/webhooks) for more information on setting up webhooks.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive names">
+    Give your inboxes clear, descriptive names that indicate their purpose (e.g., "support", "notifications", "billing").
+  </Accordion>
+  
+  <Accordion title="Custom domains for production">
+    While `@sendook.com` addresses are great for testing, use custom domains for production to maintain your brand identity and improve deliverability.
+  </Accordion>
+  
+  <Accordion title="Check for existing inboxes">
+    Email addresses must be unique. The API will return a 400 error if you try to create an inbox with an email address that already exists.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Send Emails" icon="paper-plane" href="/features/sending-emails">
+    Learn how to send emails from your inboxes
+  </Card>
+  
+  <Card title="Receive Emails" icon="inbox" href="/features/receiving-emails">
+    Set up webhooks to receive incoming emails
+  </Card>
+  
+  <Card title="Custom Domains" icon="globe" href="/features/custom-domains">
+    Add and verify your custom domain
+  </Card>
+  
+  <Card title="Threads" icon="comments" href="/features/threads">
+    Understand how email threads work
+  </Card>
+</CardGroup>

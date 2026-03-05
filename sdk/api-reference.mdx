@@ -1,0 +1,705 @@
+---
+title: 'API Reference'
+description: 'Complete reference for the Sendook Node.js SDK'
+---
+
+## SendookAPI Class
+
+### Constructor
+
+```typescript
+new SendookAPI(apiSecret: string, apiUrl?: string)
+```
+
+Initializes a new instance of the Sendook API client.
+
+#### Parameters
+
+- `apiSecret` (string, required): Your Sendook API secret key
+- `apiUrl` (string, optional): Custom API URL. Defaults to `https://api.sendook.com`
+
+#### Example
+
+```typescript
+import SendookAPI from '@sendook/node';
+
+const client = new SendookAPI('your_api_secret');
+```
+
+---
+
+## Inbox Methods
+
+Access inbox methods via `client.inbox`.
+
+### inbox.create()
+
+Creates a new inbox.
+
+```typescript
+client.inbox.create(params?: CreateInboxParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface CreateInboxParams {
+  name?: string;   // Name for the inbox
+  email?: string;  // Email address (e.g., 'support@sendook.com')
+}
+```
+
+#### Example
+
+```typescript
+const inbox = await client.inbox.create({
+  name: 'support',
+  email: 'support@sendook.com'
+});
+```
+
+### inbox.list()
+
+Returns a list of all inboxes.
+
+```typescript
+client.inbox.list(): Promise<any>
+```
+
+#### Example
+
+```typescript
+const inboxes = await client.inbox.list();
+```
+
+### inbox.get()
+
+Retrieves a specific inbox by ID.
+
+```typescript
+client.inbox.get(inboxId: string): Promise<any>
+```
+
+#### Parameters
+
+- `inboxId` (string, required): The inbox ID
+
+#### Example
+
+```typescript
+const inbox = await client.inbox.get('inbox_123');
+```
+
+### inbox.delete()
+
+Deletes an inbox and all its messages.
+
+```typescript
+client.inbox.delete(inboxId: string): Promise<any>
+```
+
+#### Parameters
+
+- `inboxId` (string, required): The inbox ID
+
+#### Example
+
+```typescript
+await client.inbox.delete('inbox_123');
+```
+
+---
+
+## Message Methods
+
+Access message methods via `client.inbox.message`.
+
+### inbox.message.send()
+
+Sends an email from an inbox.
+
+```typescript
+client.inbox.message.send(params: SendMessageParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface SendMessageParams {
+  inboxId: string;      // The inbox ID to send from
+  to: string[];         // Array of recipient email addresses
+  cc?: string[];        // Array of CC email addresses (optional)
+  bcc?: string[];       // Array of BCC email addresses (optional)
+  labels?: string[];    // Array of labels for categorization (optional)
+  subject: string;      // Email subject
+  text: string;         // Plain text content
+  html: string;         // HTML content
+}
+```
+
+#### Example
+
+```typescript
+const result = await client.inbox.message.send({
+  inboxId: 'inbox_123',
+  to: ['user@example.com'],
+  cc: ['manager@example.com'],
+  bcc: ['archive@example.com'],
+  labels: ['newsletter'],
+  subject: 'Welcome!',
+  text: 'Thanks for signing up.',
+  html: '<h1>Thanks for signing up!</h1>'
+});
+```
+
+### inbox.message.reply()
+
+Replies to an existing message.
+
+```typescript
+client.inbox.message.reply(params: ReplyMessageParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface ReplyMessageParams {
+  inboxId: string;      // The inbox ID
+  messageId: string;    // The message ID to reply to
+  text: string;         // Plain text content
+  html: string;         // HTML content
+}
+```
+
+#### Example
+
+```typescript
+const result = await client.inbox.message.reply({
+  inboxId: 'inbox_123',
+  messageId: 'msg_456',
+  text: 'Thanks for your message!',
+  html: '<p>Thanks for your message!</p>'
+});
+```
+
+### inbox.message.list()
+
+Lists messages in an inbox with optional search query.
+
+```typescript
+client.inbox.message.list(inboxId: string, query?: string): Promise<any>
+```
+
+#### Parameters
+
+- `inboxId` (string, required): The inbox ID
+- `query` (string, optional): Search query to filter messages
+
+#### Example
+
+```typescript
+// List all messages
+const messages = await client.inbox.message.list('inbox_123');
+
+// Search messages
+const results = await client.inbox.message.list(
+  'inbox_123',
+  'subject:invoice'
+);
+```
+
+### inbox.message.get()
+
+Retrieves a specific message.
+
+```typescript
+client.inbox.message.get(inboxId: string, messageId: string): Promise<any>
+```
+
+#### Parameters
+
+- `inboxId` (string, required): The inbox ID
+- `messageId` (string, required): The message ID
+
+#### Example
+
+```typescript
+const message = await client.inbox.message.get('inbox_123', 'msg_456');
+```
+
+---
+
+## Thread Methods
+
+Access thread methods via `client.inbox.thread`.
+
+### inbox.thread.list()
+
+Lists all threads in an inbox.
+
+```typescript
+client.inbox.thread.list(inboxId: string): Promise<any>
+```
+
+#### Parameters
+
+- `inboxId` (string, required): The inbox ID
+
+#### Example
+
+```typescript
+const threads = await client.inbox.thread.list('inbox_123');
+```
+
+### inbox.thread.get()
+
+Retrieves a specific thread.
+
+```typescript
+client.inbox.thread.get(inboxId: string, threadId: string): Promise<any>
+```
+
+#### Parameters
+
+- `inboxId` (string, required): The inbox ID
+- `threadId` (string, required): The thread ID
+
+#### Example
+
+```typescript
+const thread = await client.inbox.thread.get('inbox_123', 'thread_789');
+```
+
+---
+
+## Domain Methods
+
+Access domain methods via `client.domain`.
+
+### domain.create()
+
+Creates a new custom domain.
+
+```typescript
+client.domain.create(params: CreateDomainParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface CreateDomainParams {
+  name: string;  // Domain name (e.g., 'yourdomain.com')
+}
+```
+
+#### Example
+
+```typescript
+const domain = await client.domain.create({
+  name: 'yourdomain.com'
+});
+```
+
+### domain.get()
+
+Retrieves domain details.
+
+```typescript
+client.domain.get(params: GetDomainParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface GetDomainParams {
+  domainId: string;  // The domain ID
+}
+```
+
+#### Example
+
+```typescript
+const domain = await client.domain.get({
+  domainId: 'domain_123'
+});
+```
+
+### domain.verify()
+
+Verifies domain DNS configuration.
+
+```typescript
+client.domain.verify(params: VerifyDomainParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface VerifyDomainParams {
+  domainId: string;  // The domain ID
+}
+```
+
+#### Example
+
+```typescript
+const result = await client.domain.verify({
+  domainId: 'domain_123'
+});
+```
+
+### domain.dns()
+
+Retrieves DNS records for domain configuration.
+
+```typescript
+client.domain.dns(params: GetDomainDNSParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface GetDomainDNSParams {
+  domainId: string;  // The domain ID
+}
+```
+
+#### Example
+
+```typescript
+const dnsRecords = await client.domain.dns({
+  domainId: 'domain_123'
+});
+```
+
+### domain.delete()
+
+Deletes a domain.
+
+```typescript
+client.domain.delete(params: DeleteDomainParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface DeleteDomainParams {
+  domainId: string;  // The domain ID
+}
+```
+
+#### Example
+
+```typescript
+await client.domain.delete({
+  domainId: 'domain_123'
+});
+```
+
+---
+
+## Webhook Methods
+
+Access webhook methods via `client.webhook`.
+
+### webhook.create()
+
+Creates a new webhook.
+
+```typescript
+client.webhook.create(params: CreateWebhookParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface CreateWebhookParams {
+  url: string;       // Webhook endpoint URL
+  events: string[];  // Array of event types to subscribe to
+}
+```
+
+#### Available Events
+
+- `message.received` - Triggered when a message is received
+- `message.sent` - Triggered when a message is sent
+- `message.delivered` - Triggered when a message is delivered
+- `message.bounced` - Triggered when a message bounces
+- `message.rejected` - Triggered when a message is rejected
+
+#### Example
+
+```typescript
+const webhook = await client.webhook.create({
+  url: 'https://your-app.com/webhooks/sendook',
+  events: ['message.received', 'message.sent']
+});
+```
+
+### webhook.list()
+
+Lists all webhooks.
+
+```typescript
+client.webhook.list(): Promise<any>
+```
+
+#### Example
+
+```typescript
+const webhooks = await client.webhook.list();
+```
+
+### webhook.get()
+
+Retrieves a specific webhook.
+
+```typescript
+client.webhook.get(webhookId: string): Promise<any>
+```
+
+#### Parameters
+
+- `webhookId` (string, required): The webhook ID
+
+#### Example
+
+```typescript
+const webhook = await client.webhook.get('webhook_123');
+```
+
+### webhook.test()
+
+Tests a webhook by sending a test event.
+
+```typescript
+client.webhook.test(webhookId: string): Promise<any>
+```
+
+#### Parameters
+
+- `webhookId` (string, required): The webhook ID
+
+#### Example
+
+```typescript
+const result = await client.webhook.test('webhook_123');
+```
+
+### webhook.delete()
+
+Deletes a webhook.
+
+```typescript
+client.webhook.delete(webhookId: string): Promise<any>
+```
+
+#### Parameters
+
+- `webhookId` (string, required): The webhook ID
+
+#### Example
+
+```typescript
+await client.webhook.delete('webhook_123');
+```
+
+---
+
+## API Key Methods
+
+Access API key methods via `client.apiKey`.
+
+### apiKey.create()
+
+Creates a new API key.
+
+```typescript
+client.apiKey.create(params: CreateApiKeyParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface CreateApiKeyParams {
+  name: string;  // Name for the API key
+}
+```
+
+#### Example
+
+```typescript
+const apiKey = await client.apiKey.create({
+  name: 'Production Key'
+});
+```
+
+### apiKey.list()
+
+Lists all API keys.
+
+```typescript
+client.apiKey.list(): Promise<any>
+```
+
+#### Example
+
+```typescript
+const apiKeys = await client.apiKey.list();
+```
+
+### apiKey.get()
+
+Retrieves a specific API key.
+
+```typescript
+client.apiKey.get(params: GetApiKeyParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface GetApiKeyParams {
+  apiKeyId: string;  // The API key ID
+}
+```
+
+#### Example
+
+```typescript
+const apiKey = await client.apiKey.get({
+  apiKeyId: 'key_123'
+});
+```
+
+### apiKey.delete()
+
+Deletes an API key.
+
+```typescript
+client.apiKey.delete(params: DeleteApiKeyParams): Promise<any>
+```
+
+#### Parameters
+
+```typescript
+interface DeleteApiKeyParams {
+  apiKeyId: string;  // The API key ID
+}
+```
+
+#### Example
+
+```typescript
+await client.apiKey.delete({
+  apiKeyId: 'key_123'
+});
+```
+
+---
+
+## Type Definitions
+
+The SDK exports the following TypeScript types:
+
+### Interface Exports
+
+```typescript
+import type {
+  // Method interfaces
+  ApiKeyMethods,
+  DomainMethods,
+  InboxMethods,
+  WebhookMethods,
+  MessageMethods,
+  ThreadMethods,
+  
+  // Parameter types
+  CreateApiKeyParams,
+  GetApiKeyParams,
+  DeleteApiKeyParams,
+  CreateDomainParams,
+  GetDomainParams,
+  VerifyDomainParams,
+  GetDomainDNSParams,
+  DeleteDomainParams,
+  CreateInboxParams,
+  SendMessageParams,
+  ReplyMessageParams,
+  CreateWebhookParams,
+  GetWebhookParams,
+  DeleteWebhookParams
+} from '@sendook/node';
+```
+
+### Usage with Types
+
+```typescript
+import SendookAPI from '@sendook/node';
+import type { SendMessageParams } from '@sendook/node';
+
+const client = new SendookAPI('your_api_secret');
+
+const messageParams: SendMessageParams = {
+  inboxId: 'inbox_123',
+  to: ['user@example.com'],
+  subject: 'Hello',
+  text: 'Hello, world!',
+  html: '<p>Hello, world!</p>'
+};
+
+await client.inbox.message.send(messageParams);
+```
+
+---
+
+## Error Handling
+
+All methods return promises that may reject with axios errors. Always use try-catch blocks:
+
+```typescript
+import SendookAPI from '@sendook/node';
+import { AxiosError } from 'axios';
+
+const client = new SendookAPI(process.env.SENDOOK_API_SECRET!);
+
+try {
+  const inbox = await client.inbox.create({
+    name: 'support'
+  });
+} catch (error) {
+  if (error instanceof AxiosError) {
+    if (error.response) {
+      // Server responded with error status
+      console.error('Status:', error.response.status);
+      console.error('Data:', error.response.data);
+    } else if (error.request) {
+      // Request made but no response received
+      console.error('No response from server');
+    }
+  } else {
+    console.error('Error:', error);
+  }
+}
+```
+
+### Common Error Codes
+
+- `401` - Unauthorized (invalid API key)
+- `404` - Resource not found
+- `422` - Validation error (invalid parameters)
+- `429` - Rate limit exceeded
+- `500` - Internal server error
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/sdk/installation">
+    Learn how to install the SDK
+  </Card>
+  <Card title="Usage Examples" icon="code" href="/sdk/usage">
+    View practical usage examples
+  </Card>
+</CardGroup>

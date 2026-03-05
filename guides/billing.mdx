@@ -1,0 +1,380 @@
+---
+title: Billing
+description: Understand Sendook's usage-based billing, Stripe integration, and pricing model
+---
+
+## Overview
+
+Sendook uses usage-based billing powered by Stripe. You only pay for the emails you send and receive.
+
+## Pricing Model
+
+Sendook charges based on email usage with no upfront costs or monthly minimums.
+
+### What's Metered
+
+Billing is calculated on:
+- **Messages sent** - Each outbound email from your inboxes
+- **Messages received** - Each inbound email to your inboxes
+
+<Note>
+  Webhook deliveries, API calls, and dashboard usage are not metered or charged.
+</Note>
+
+### Billing Period
+
+Charges are calculated monthly:
+- **Billing period** - First day to last day of each calendar month
+- **Invoice generation** - Invoices are created at the end of each billing period
+- **Payment** - Automatic payment from your saved payment method
+
+## Stripe Integration
+
+Sendook is fully integrated with Stripe for secure payment processing.
+
+### Setting Up Billing
+
+**On Registration**
+
+When you sign up, Sendook automatically:
+1. Creates a Stripe customer account
+2. Creates a subscription with usage-based pricing
+3. Links your organization to the Stripe customer
+
+**Adding a Payment Method**
+
+1. Log in to the dashboard
+2. Navigate to **Billing**
+3. Click **Add Payment Method**
+4. Enter your card details in the Stripe form
+5. Add your billing address
+6. Click **Add Payment Method**
+
+<Info>
+  Sendook uses Stripe Elements for secure card collection. Your card details never touch Sendook's servers.
+</Info>
+
+### Required Environment Variables
+
+For self-hosted deployments, configure these Stripe environment variables:
+
+```bash
+STRIPE_SECRET_KEY=sk_test_... # Your Stripe secret key
+STRIPE_WEBHOOK_SECRET=whsec_... # Stripe webhook signing secret
+STRIPE_PRICE_ID=price_... # Your usage-based price ID
+STRIPE_PRODUCT_ID=prod_... # Your product ID
+STRIPE_METER_EVENT=email_sent # Meter event name for tracking usage
+```
+
+## Usage Tracking
+
+Sendook tracks usage in real-time using Stripe's billing meters.
+
+### How It Works
+
+1. **Message sent/received** - Your application sends or receives an email
+2. **Meter event created** - Sendook sends a meter event to Stripe:
+   ```typescript
+   stripe.billing.meterEvents.create({
+     event_name: process.env.STRIPE_METER_EVENT,
+     timestamp: Math.floor(Date.now() / 1000),
+     payload: {
+       stripe_customer_id: customerId,
+       value: "1"
+     }
+   });
+   ```
+3. **Usage aggregated** - Stripe aggregates all events for the billing period
+4. **Invoice generated** - At period end, Stripe creates an invoice based on total usage
+
+### Viewing Usage
+
+In the dashboard:
+1. Navigate to **Billing**
+2. View **Current Month Invoice**
+3. See accumulated charges for the current period
+
+Invoice details show:
+- Current status (Draft, Open, Paid)
+- Amount due
+- Billing period dates
+- Link to detailed invoice in Stripe
+
+## Payment Methods
+
+### Supported Payment Types
+
+- Credit cards (Visa, Mastercard, American Express)
+- Debit cards
+- Additional methods supported by Stripe
+
+### Managing Payment Methods
+
+**Updating Your Card**
+
+1. Go to **Billing** in the dashboard
+2. Click **Update** next to your current payment method
+3. Enter new card details
+4. Submit the form
+
+The new card becomes your default payment method immediately.
+
+**Payment Method Details**
+
+Your saved payment method shows:
+- Card brand and last 4 digits
+- Expiration date
+- Billing address
+
+<Warning>
+  Keep your payment method up to date. Failed payments may result in service interruption.
+</Warning>
+
+## Invoices
+
+### Invoice Lifecycle
+
+1. **Draft** - Invoice being calculated during billing period
+2. **Open** - Invoice finalized and awaiting payment
+3. **Paid** - Payment successfully processed
+4. **Uncollectible** - Payment failed after retries
+5. **Void** - Invoice cancelled
+
+### Accessing Invoices
+
+**Via Dashboard**
+1. Navigate to **Billing**
+2. Click **View Invoice** to open in Stripe
+3. Download PDF or view details
+
+**Via API**
+
+Retrieve the current month's invoice:
+```bash
+curl https://api.sendook.com/organizations/{organization_id}/payment_methods/invoice/current \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Response:
+```json
+{
+  "invoice": {
+    "id": "in_abc123",
+    "amount_due": 1500,
+    "currency": "usd",
+    "status": "paid",
+    "period_start": 1709251200,
+    "period_end": 1711929599,
+    "hosted_invoice_url": "https://invoice.stripe.com/i/..."
+  }
+}
+```
+
+### Invoice History
+
+Access past invoices:
+```bash
+curl https://api.sendook.com/organizations/{organization_id}/payment_methods/invoices?limit=10 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+## Stripe Customer Management
+
+Each organization is linked to a Stripe customer.
+
+### Customer Creation
+
+When you register, Sendook creates a Stripe customer:
+
+```typescript
+const customer = await stripe.customers.create({
+  name: organizationName,
+  email: userEmail
+});
+```
+
+### Subscription Creation
+
+A subscription is automatically created with your usage-based price:
+
+```typescript
+const subscription = await stripe.subscriptions.create({
+  customer: customerId,
+  items: [{ price: process.env.STRIPE_PRICE_ID }]
+});
+```
+
+### Payment Method Attachment
+
+When you add a payment method:
+
+1. Create a Setup Intent:
+   ```typescript
+   const setupIntent = await stripe.setupIntents.create({
+     customer: customerId,
+     payment_method_types: ['card']
+   });
+   ```
+
+2. Confirm on client side with Stripe Elements
+
+3. Attach the payment method:
+   ```typescript
+   await stripe.paymentMethods.attach(paymentMethodId, {
+     customer: customerId
+   });
+   ```
+
+## Self-Hosting Billing
+
+If you're self-hosting Sendook, you'll need to set up your own Stripe account.
+
+### Prerequisites
+
+1. **Stripe Account** - Sign up at [stripe.com](https://stripe.com)
+2. **Product & Price** - Create a product with usage-based pricing
+3. **Billing Meter** - Set up a meter for tracking email usage
+4. **Webhook Endpoint** - Configure webhook for payment events
+
+### Setup Steps
+
+**1. Create Stripe Product**
+
+In your Stripe dashboard:
+- Go to Products
+- Click "Add product"
+- Select "Usage based" pricing
+- Set your per-unit price
+- Save the product ID and price ID
+
+**2. Create Billing Meter**
+
+- Go to Billing → Meters
+- Create a new meter (e.g., "email_sent")
+- Note the meter event name
+
+**3. Configure Environment Variables**
+
+Add to your `.env` file:
+
+```bash
+STRIPE_SECRET_KEY=sk_live_your_key
+STRIPE_WEBHOOK_SECRET=whsec_your_secret
+STRIPE_PRICE_ID=price_your_price_id
+STRIPE_PRODUCT_ID=prod_your_product_id
+STRIPE_METER_EVENT=email_sent
+```
+
+**4. Set Up Webhooks**
+
+Configure Stripe webhook to point to:
+```
+https://your-domain.com/webhook/stripe
+```
+
+Subscribe to events:
+- `invoice.payment_succeeded`
+- `invoice.payment_failed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+<Warning>
+  The webhook secret is required to verify webhook signatures. Never commit it to version control.
+</Warning>
+
+## API Integration
+
+### Get Payment Method
+
+```bash
+curl https://api.sendook.com/organizations/{organization_id}/payment_methods \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Create Setup Intent
+
+```bash
+curl -X POST https://api.sendook.com/organizations/{organization_id}/payment_methods/setup-intent \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### Attach Payment Method
+
+```bash
+curl -X POST https://api.sendook.com/organizations/{organization_id}/payment_methods/attach \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"paymentMethodId": "pm_abc123"}'
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Payment Failed">
+    If a payment fails:
+    1. Check that your card is valid and has sufficient funds
+    2. Update your payment method in the dashboard
+    3. Contact your bank if the card is declined
+    4. Stripe will automatically retry failed payments
+  </Accordion>
+  
+  <Accordion title="No Invoice Showing">
+    - Invoices are generated at the end of each billing period
+    - During the month, you'll see a "Draft" invoice
+    - If no usage, no invoice will be generated
+  </Accordion>
+  
+  <Accordion title="Incorrect Usage Amount">
+    - Check the meter events in Stripe dashboard
+    - Verify STRIPE_METER_EVENT is set correctly
+    - Look for failed meter event submissions in logs
+  </Accordion>
+  
+  <Accordion title="Can't Add Payment Method">
+    - Ensure Stripe publishable key is configured
+    - Check browser console for Stripe errors
+    - Verify billing address is complete
+    - Try a different card or payment method
+  </Accordion>
+</AccordionGroup>
+
+## Cost Optimization
+
+<CardGroup cols={2}>
+  <Card title="Monitor Usage" icon="chart-line">
+    Regularly check your current month invoice to track spending trends.
+  </Card>
+  
+  <Card title="Set Up Alerts" icon="bell">
+    Configure Stripe billing alerts to notify you when spending exceeds thresholds.
+  </Card>
+  
+  <Card title="Optimize Workflows" icon="gauge">
+    Review your email workflows to reduce unnecessary messages.
+  </Card>
+  
+  <Card title="Test in Development" icon="flask">
+    Use a separate organization with a test Stripe account for development.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard" icon="gauge" href="/guides/dashboard">
+    Learn how to manage billing in the dashboard
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate billing into your application
+  </Card>
+  
+  <Card title="Self-Hosting" icon="server" href="/guides/self-hosting">
+    Set up billing for self-hosted deployments
+  </Card>
+  
+  <Card title="Authentication" icon="key" href="/guides/authentication">
+    Secure your API access
+  </Card>
+</CardGroup>

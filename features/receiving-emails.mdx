@@ -1,0 +1,320 @@
+---
+title: "Receiving Emails"
+description: "Receive and process incoming emails via webhooks with parsed content"
+---
+
+## Overview
+
+Sendook can receive emails sent to any of your inboxes. Incoming emails are automatically parsed and sent to your webhook endpoints, making it easy to build email-driven workflows.
+
+## How It Works
+
+1. **Set up DNS records** - Configure MX records to route emails to Sendook (automatic for `@sendook.com`, required for custom domains)
+2. **Create a webhook** - Register a webhook endpoint to receive incoming emails
+3. **Receive emails** - When someone emails your inbox, Sendook parses it and sends the data to your webhook
+4. **Process in your app** - Handle the webhook payload in your application
+
+## Setting Up Email Reception
+
+### For sendook.com Addresses
+
+Inboxes using `@sendook.com` addresses can receive emails immediately—no configuration needed.
+
+```typescript
+// Create an inbox
+const inbox = await client.inbox.create({
+  name: "support",
+  email: "support@sendook.com"
+});
+
+// Create a webhook to receive emails
+await client.webhook.create({
+  url: "https://your-app.com/webhooks/email",
+  events: ["message.received"]
+});
+
+// That's it! Start receiving emails at support@sendook.com
+```
+
+### For Custom Domains
+
+For custom domains, you need to configure MX records. See [Custom Domains](/features/custom-domains) for detailed instructions.
+
+## Webhook Integration
+
+When an email is received, Sendook sends a POST request to your webhook URL:
+
+```json
+{
+  "event": "message.received",
+  "messageId": "msg_789",
+  "inboxId": "inbox_123",
+  "payload": {
+    "id": "msg_789",
+    "organizationId": "org_456",
+    "inboxId": "inbox_123",
+    "threadId": "thread_012",
+    "from": "sender@example.com",
+    "fromInboxId": "inbox_456",
+    "to": ["support@sendook.com"],
+    "toInboxId": "inbox_123",
+    "subject": "Help with my account",
+    "text": "I need help accessing my account...",
+    "html": "I need help accessing my account...",
+    "status": "received",
+    "createdAt": "2024-01-01T12:00:00.000Z",
+    "updatedAt": "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
+## Parsed Email Format
+
+Received emails include:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique message ID |
+| `organizationId` | string | Your organization ID |
+| `inboxId` | string | Inbox that received the email |
+| `threadId` | string | Thread this message belongs to |
+| `from` | string | Sender's email address |
+| `fromInboxId` | string | ID of sender's inbox (if they're also a Sendook user) |
+| `to` | string[] | Recipient email addresses |
+| `toInboxId` | string | ID of the inbox that received the email |
+| `subject` | string | Email subject line |
+| `text` | string | Plain text content (parsed and cleaned) |
+| `html` | string | HTML content (parsed and cleaned) |
+| `status` | string | Message status ("received") |
+| `createdAt` | string | ISO 8601 timestamp |
+| `updatedAt` | string | ISO 8601 timestamp |
+
+<Note>
+  Sendook uses email-reply-parser to extract only the visible content from emails, removing quoted replies and signatures for cleaner processing.
+</Note>
+
+## Thread Detection
+
+Sendook automatically detects email threads:
+
+- If an incoming email is a reply (based on References header), it's added to the existing thread
+- If it's a new conversation, a new thread is created
+- All messages in a conversation share the same `threadId`
+
+Learn more in [Threads](/features/threads).
+
+## Example Webhook Handler
+
+Here's an example webhook handler in Node.js:
+
+<CodeGroup>
+
+```typescript Express.js
+import express from "express";
+
+const app = express();
+
+app.post("/webhooks/email", express.json(), async (req, res) => {
+  const { event, messageId, inboxId, payload } = req.body;
+  
+  if (event === "message.received") {
+    const message = payload;
+    
+    console.log(`New email from ${message.from}`);
+    console.log(`Subject: ${message.subject}`);
+    console.log(`Content: ${message.text}`);
+    
+    // Process the email in your application
+    // For example: create a support ticket, trigger AI response, etc.
+    
+    // Always respond with 200 to acknowledge receipt
+    return res.status(200).json({ success: true });
+  }
+  
+  res.status(200).json({ success: true });
+});
+
+app.listen(3000);
+```
+
+```typescript Next.js
+// app/api/webhooks/email/route.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const { event, messageId, inboxId, payload } = await req.json();
+  
+  if (event === "message.received") {
+    const message = payload;
+    
+    console.log(`New email from ${message.from}`);
+    console.log(`Subject: ${message.subject}`);
+    console.log(`Content: ${message.text}`);
+    
+    // Process the email
+    // ...
+  }
+  
+  return NextResponse.json({ success: true });
+}
+```
+
+```python Python (Flask)
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/webhooks/email", methods=["POST"])
+def handle_email_webhook():
+    data = request.json
+    event = data.get("event")
+    
+    if event == "message.received":
+        message = data.get("payload")
+        
+        print(f"New email from {message['from']}")
+        print(f"Subject: {message['subject']}")
+        print(f"Content: {message['text']}")
+        
+        # Process the email
+        # ...
+    
+    return jsonify({"success": True}), 200
+
+if __name__ == "__main__":
+    app.run(port=3000)
+```
+
+</CodeGroup>
+
+<Warning>
+  Your webhook endpoint must respond with a 2xx status code to acknowledge receipt. If your endpoint fails repeatedly, Sendook may disable the webhook.
+</Warning>
+
+## Retrieving Received Messages
+
+You can also retrieve received messages via the API:
+
+<CodeGroup>
+
+```typescript Node.js SDK
+// List all messages in an inbox
+const messages = await client.inbox.message.list("inbox_123");
+
+// Get a specific message
+const message = await client.inbox.message.get(
+  "inbox_123",
+  "msg_789"
+);
+
+console.log(message);
+```
+
+```bash cURL
+# List all messages
+curl https://api.sendook.com/v1/inboxes/inbox_123/messages \
+  -H "Authorization: Bearer your_api_key"
+
+# Get a specific message
+curl https://api.sendook.com/v1/inboxes/inbox_123/messages/msg_789 \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+## Searching Messages
+
+Search for messages using regex patterns:
+
+```typescript
+// Search messages by subject or content
+const messages = await client.inbox.message.list(
+  "inbox_123",
+  "urgent" // Search query
+);
+```
+
+The search query supports regex and searches across:
+- `to` addresses
+- `from` address
+- `cc` addresses
+- `subject`
+- Message body (`text` and `html`)
+
+## Auto-Replies
+
+You can build auto-reply functionality by combining received emails with sending:
+
+```typescript
+app.post("/webhooks/email", async (req, res) => {
+  const { payload } = req.body;
+  
+  // Auto-reply to received email
+  await client.inbox.message.reply({
+    inboxId: payload.inboxId,
+    messageId: payload.id,
+    text: "Thank you for your message. We'll get back to you soon!",
+    html: "<p>Thank you for your message. We'll get back to you soon!</p>"
+  });
+  
+  res.status(200).json({ success: true });
+});
+```
+
+## Common Use Cases
+
+<AccordionGroup>
+  <Accordion title="Customer Support Inbox">
+    Receive support emails and automatically create tickets in your system. Use AI to categorize and prioritize incoming requests.
+  </Accordion>
+  
+  <Accordion title="Email-Based Commands">
+    Parse incoming emails to trigger actions in your app (e.g., "deploy to production" emails from authorized users).
+  </Accordion>
+  
+  <Accordion title="Email Forwarding Service">
+    Build an email forwarding or filtering service by receiving emails and conditionally forwarding them.
+  </Accordion>
+  
+  <Accordion title="AI Email Assistant">
+    Use AI to analyze incoming emails and generate smart replies automatically.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Tip>
+  **Always respond quickly** - Your webhook endpoint should respond within 5 seconds. If you need to do heavy processing, acknowledge the webhook immediately and process asynchronously.
+</Tip>
+
+<Tip>
+  **Validate webhook authenticity** - In production, validate that webhooks are coming from Sendook's servers to prevent spoofing.
+</Tip>
+
+<Tip>
+  **Handle duplicates** - Store processed message IDs to avoid processing the same email twice if webhooks are retried.
+</Tip>
+
+<Tip>
+  **Use threads** - Check the threadId to determine if an email is part of an ongoing conversation.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Webhooks" icon="webhook" href="/features/webhooks">
+    Learn more about webhook configuration and events
+  </Card>
+  
+  <Card title="Threads" icon="comments" href="/features/threads">
+    Understand how threads organize conversations
+  </Card>
+  
+  <Card title="Send Emails" icon="paper-plane" href="/features/sending-emails">
+    Reply to received emails
+  </Card>
+  
+  <Card title="Custom Domains" icon="globe" href="/features/custom-domains">
+    Set up custom domains for receiving emails
+  </Card>
+</CardGroup>

@@ -1,0 +1,373 @@
+---
+title: 'API Keys'
+description: 'Manage API keys for authentication'
+icon: 'key'
+---
+
+API keys are used to authenticate requests to the Sendook API. Each API key is associated with an organization and provides full access to that organization's resources.
+
+<Warning>
+  API keys provide complete access to your organization. Keep them secure and never commit them to version control or expose them in client-side code.
+</Warning>
+
+## Create API Key
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.sendook.com/v1/api_keys \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production API Key"
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/api_keys', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Production API Key'
+  })
+});
+
+const apiKey = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.sendook.com/v1/api_keys',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={'name': 'Production API Key'}
+)
+
+api_key = response.json()
+```
+</CodeGroup>
+
+Create a new API key for your organization.
+
+<Note>
+  The API key value is only returned once during creation. Store it securely - you won't be able to retrieve it again.
+</Note>
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  A descriptive name for the API key to help you identify its purpose.
+  
+  Cannot be empty or contain only whitespace.
+  
+  Example: `"Production API Key"`, `"Development Key"`, `"CI/CD Pipeline"`
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the API key.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The descriptive name of the API key.
+</ResponseField>
+
+<ResponseField name="key" type="string">
+  The actual API key value. This is only returned when creating the key.
+  
+  <Warning>
+    Store this value securely. It will not be shown again.
+  </Warning>
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization this API key belongs to.
+</ResponseField>
+
+<ResponseField name="active" type="boolean">
+  Whether the API key is active. New keys are active by default.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the API key was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the API key was last updated.
+</ResponseField>
+
+---
+
+## List API Keys
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/api_keys \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/api_keys', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const apiKeys = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/api_keys',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+api_keys = response.json()
+```
+</CodeGroup>
+
+Retrieve all API keys for your organization.
+
+<Note>
+  For security reasons, the actual key values are never returned when listing API keys.
+</Note>
+
+### Response
+
+Returns an array of API key objects.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the API key.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The descriptive name of the API key.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization this API key belongs to.
+</ResponseField>
+
+<ResponseField name="active" type="boolean">
+  Whether the API key is active.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the API key was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the API key was last updated.
+</ResponseField>
+
+---
+
+## Get API Key
+
+<CodeGroup>
+```bash cURL
+curl https://api.sendook.com/v1/api_keys/key_123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/api_keys/key_123', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const apiKey = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.sendook.com/v1/api_keys/key_123',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+api_key = response.json()
+```
+</CodeGroup>
+
+Retrieve a specific API key by its ID.
+
+### Path Parameters
+
+<ParamField path="apiKeyId" type="string" required>
+  The unique identifier of the API key to retrieve.
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique identifier for the API key.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The descriptive name of the API key.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization this API key belongs to.
+</ResponseField>
+
+<ResponseField name="active" type="boolean">
+  Whether the API key is active.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the API key was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the API key was last updated.
+</ResponseField>
+
+---
+
+## Delete API Key
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/api_keys/key_123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```javascript Node.js
+const response = await fetch('https://api.sendook.com/v1/api_keys/key_123', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const deletedKey = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.delete(
+    'https://api.sendook.com/v1/api_keys/key_123',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'}
+)
+
+deleted_key = response.json()
+```
+</CodeGroup>
+
+Delete an API key. Once deleted, the key can no longer be used to authenticate API requests.
+
+<Warning>
+  This action is permanent and cannot be undone. Any applications using this API key will immediately lose access.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="apiKeyId" type="string" required>
+  The unique identifier of the API key to delete.
+</ParamField>
+
+### Response
+
+Returns the deleted API key object.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the deleted API key.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The descriptive name of the API key.
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  ID of the organization this API key belonged to.
+</ResponseField>
+
+<ResponseField name="active" type="boolean">
+  Will be `false` for deleted keys.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the API key was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the API key was last updated.
+</ResponseField>
+
+---
+
+## Authentication
+
+API keys are used to authenticate all requests to the Sendook API. Include your API key in the `Authorization` header of each request:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Example Request
+
+```bash
+curl https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer sk_live_abc123..."
+```
+
+### Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Secure Storage" icon="vault">
+    Store API keys in environment variables or secure secret management systems. Never hardcode them in your application code.
+    
+    ```bash
+    # Good
+    export SENDOOK_API_KEY=sk_live_abc123...
+    
+    # Bad (never do this)
+    const apiKey = "sk_live_abc123...";
+    ```
+  </Accordion>
+  
+  <Accordion title="Key Rotation" icon="rotate">
+    Regularly rotate your API keys for enhanced security:
+    1. Create a new API key
+    2. Update your applications to use the new key
+    3. Delete the old API key
+    
+    This minimizes the impact if a key is ever compromised.
+  </Accordion>
+  
+  <Accordion title="Separate Environments" icon="layer-group">
+    Use different API keys for different environments:
+    - Development
+    - Staging
+    - Production
+    
+    This provides isolation and makes it easier to manage access.
+  </Accordion>
+  
+  <Accordion title="Monitor Usage" icon="chart-line">
+    Use descriptive names for your API keys to track which keys are used where. This makes it easier to identify and revoke compromised keys.
+  </Accordion>
+</AccordionGroup>
+
+### Error Responses
+
+**401 Unauthorized**
+- Missing or invalid API key
+- Deleted or inactive API key
+
+**403 Forbidden**
+- API key doesn't have permission to access the requested resource

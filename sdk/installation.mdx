@@ -1,0 +1,108 @@
+---
+title: 'Installation'
+description: 'Install the Sendook Node.js SDK in your project'
+---
+
+## Package Information
+
+The Sendook Node.js SDK is available as an npm package:
+
+- **Package name**: `@sendook/node`
+- **Version**: 0.7.0
+- **License**: MIT
+- **Repository**: [github.com/sendook/sendook](https://github.com/sendook/sendook)
+
+## Requirements
+
+- Node.js 16.x or higher
+- TypeScript 5.x (peer dependency)
+- Works with ESM and CommonJS
+
+## Installation
+
+Install the SDK using your preferred package manager:
+
+<CodeGroup>
+
+```bash npm
+npm install @sendook/node
+```
+
+```bash yarn
+yarn add @sendook/node
+```
+
+```bash pnpm
+pnpm add @sendook/node
+```
+
+```bash bun
+bun add @sendook/node
+```
+
+</CodeGroup>
+
+## Module Support
+
+The SDK supports both ESM and CommonJS:
+
+### ES Modules (ESM)
+
+```typescript
+import SendookAPI from '@sendook/node';
+
+const client = new SendookAPI('your_api_secret');
+```
+
+### CommonJS
+
+```javascript
+const SendookAPI = require('@sendook/node');
+
+const client = new SendookAPI('your_api_secret');
+```
+
+## TypeScript Support
+
+The SDK is written in TypeScript and includes full type definitions. No additional `@types` package is needed.
+
+```typescript
+import SendookAPI from '@sendook/node';
+import type {
+  ApiKeyMethods,
+  DomainMethods,
+  InboxMethods,
+  WebhookMethods,
+  CreateInboxParams,
+  SendMessageParams
+} from '@sendook/node';
+```
+
+## Verify Installation
+
+Create a test file to verify the installation:
+
+```typescript test.ts
+import SendookAPI from '@sendook/node';
+
+const client = new SendookAPI('your_api_secret');
+
+console.log('Sendook SDK installed successfully!');
+```
+
+Run the test:
+
+```bash
+node test.ts
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Basic Usage" icon="code" href="/sdk/usage">
+    Learn how to initialize and use the SDK
+  </Card>
+  <Card title="API Reference" icon="book" href="/sdk/api-reference">
+    Explore all available methods and types
+  </Card>
+</CardGroup>

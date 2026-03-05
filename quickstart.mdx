@@ -1,80 +1,395 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with Sendook in 5 minutes - create an inbox, send your first email, and set up webhooks
 ---
 
-## Get started in three steps
+## Get Started in 5 Minutes
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through creating your first inbox, sending an email, receiving emails via webhooks, and optional custom domain setup.
 
-### Step 1: Set up your local environment
+<Steps>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Step title="Sign Up & Get API Key">
+
+1. Go to [sendook.com](https://sendook.com) and create an account
+2. Navigate to your dashboard and generate an API key
+3. Copy your API key - you'll need it for authentication
+
+<Warning>
+  Keep your API key secure! Never commit it to version control or expose it in client-side code.
+</Warning>
+
+</Step>
+
+<Step title="Install the SDK (Optional)">
+
+You can use Sendook via direct API calls or the TypeScript SDK:
+
+<CodeGroup>
+```bash npm
+npm install @sendook/node
+```
+
+```bash yarn
+yarn add @sendook/node
+```
+
+```bash bun
+bun add @sendook/node
+```
+</CodeGroup>
+
+</Step>
+
+<Step title="Create Your First Inbox">
+
+Create an inbox to send and receive emails. You can use a `@sendook.com` address (no verification needed) or your own custom domain.
+
+<Tabs>
+  <Tab title="TypeScript SDK">
+    ```typescript
+    import Sendook from "@sendook/node";
+
+    // Initialize client with your API key
+    const client = new Sendook("your_api_key");
+
+    // Create an inbox with a @sendook.com address
+    const inbox = await client.inbox.create({
+      name: "support",
+      email: "support@sendook.com"
+    });
+
+    console.log(`Inbox created: ${inbox.email}`);
+    console.log(`Inbox ID: ${inbox.id}`);
+    ```
+  </Tab>
+  
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.sendook.com/v1/inboxes \
+      -H "Authorization: Bearer your_api_key" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "support",
+        "email": "support@sendook.com"
+      }'
+    ```
+  </Tab>
+  
+  <Tab title="Custom Domain">
+    ```typescript
+    import Sendook from "@sendook/node";
+
+    const client = new Sendook("your_api_key");
+
+    // First, add your custom domain
+    const domain = await client.domain.create({
+      name: "yourdomain.com"
+    });
+
+    // Get DNS records to configure
+    const dnsRecords = await client.domain.dns({
+      domainId: domain.id
+    });
+
+    console.log("Add these DNS records:", dnsRecords);
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    // After adding DNS records, verify the domain
+    const verified = await client.domain.verify({
+      domainId: domain.id
+    });
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+    // Now create inbox with your custom domain
+    const inbox = await client.inbox.create({
+      name: "support",
+      email: "support@yourdomain.com"
+    });
+    ```
+  </Tab>
+</Tabs>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **Domain Verification:**
+  - `@sendook.com` emails work immediately
+  - Custom domains require MX records (receiving) and DKIM/SPF/DMARC records (sending)
 </Note>
+
+</Step>
+
+<Step title="Send Your First Email">
+
+Now let's send an email from your inbox:
+
+<Tabs>
+  <Tab title="TypeScript SDK">
+    ```typescript
+    // Send an email
+    const message = await client.inbox.message.send({
+      inboxId: inbox.id,
+      to: ["recipient@example.com"],
+      subject: "Welcome to Sendook!",
+      text: "Thanks for trying Sendook.",
+      html: "<p>Thanks for trying <strong>Sendook</strong>.</p>"
+    });
+
+    console.log(`Message sent: ${message.id}`);
+    ```
+  </Tab>
+  
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.sendook.com/v1/inboxes/{inbox_id}/messages/send \
+      -H "Authorization: Bearer your_api_key" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "to": ["recipient@example.com"],
+        "subject": "Welcome to Sendook!",
+        "text": "Thanks for trying Sendook.",
+        "html": "<p>Thanks for trying <strong>Sendook</strong>.</p>"
+      }'
+    ```
+  </Tab>
+  
+  <Tab title="With CC, BCC & Labels">
+    ```typescript
+    const message = await client.inbox.message.send({
+      inboxId: inbox.id,
+      to: ["recipient@example.com"],
+      cc: ["manager@example.com"],
+      bcc: ["archive@example.com"],
+      labels: ["welcome", "onboarding"],
+      subject: "Welcome to Sendook!",
+      text: "Thanks for trying Sendook.",
+      html: "<p>Thanks for trying <strong>Sendook</strong>.</p>",
+      attachments: [
+        {
+          content: "base64_encoded_content",
+          name: "welcome.pdf",
+          contentType: "application/pdf"
+        }
+      ]
+    });
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  **Rate Limits:** Each inbox can send up to 100 messages per hour. Need higher limits? Contact support.
+</Note>
+
+</Step>
+
+<Step title="Receive Emails with Webhooks">
+
+Set up a webhook to receive incoming emails in real-time:
+
+<Tabs>
+  <Tab title="TypeScript SDK">
+    ```typescript
+    // Create a webhook to receive emails
+    const webhook = await client.webhook.create({
+      url: "https://your-app.com/webhooks/email",
+      events: ["message.received"]
+    });
+
+    console.log(`Webhook created: ${webhook.id}`);
+    ```
+  </Tab>
+  
+  <Tab title="cURL">
+    ```bash
+    curl -X POST https://api.sendook.com/v1/webhooks \
+      -H "Authorization: Bearer your_api_key" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://your-app.com/webhooks/email",
+        "events": ["message.received"]
+      }'
+    ```
+  </Tab>
+  
+  <Tab title="Webhook Handler">
+    ```typescript
+    // Example webhook handler (Express.js)
+    import express from "express";
+    
+    const app = express();
+    app.use(express.json());
+
+    app.post("/webhooks/email", (req, res) => {
+      const { event, payload } = req.body;
+      
+      if (event === "message.received") {
+        const message = payload;
+        console.log(`New email from: ${message.from}`);
+        console.log(`Subject: ${message.subject}`);
+        console.log(`Body: ${message.text}`);
+        
+        // Process the email...
+      }
+      
+      res.sendStatus(200);
+    });
+
+    app.listen(3000);
+    ```
+  </Tab>
+</Tabs>
+
+**Available webhook events:**
+- `message.received` - Incoming email received
+- `message.sent` - Email sent successfully
+- `message.delivered` - Email delivered to recipient
+- `message.bounced` - Email bounced
+- `message.rejected` - Email rejected
+- `inbox.created` - New inbox created
+- `inbox.deleted` - Inbox deleted
+
+<Note>
+  Test your webhook using the test endpoint:
+  ```typescript
+  await client.webhook.test(webhook.id);
+  ```
+</Note>
+
+</Step>
+
+<Step title="View Messages & Threads">
+
+Retrieve and search through your messages:
+
+<Tabs>
+  <Tab title="List Messages">
+    ```typescript
+    // Get all messages in an inbox
+    const messages = await client.inbox.message.list(inbox.id);
+
+    console.log(`Total messages: ${messages.length}`);
+    ```
+  </Tab>
+  
+  <Tab title="Search Messages">
+    ```typescript
+    // Search messages with regex
+    const results = await client.inbox.message.list(
+      inbox.id,
+      "urgent" // Search query (supports regex)
+    );
+
+    console.log(`Found ${results.length} messages`);
+    ```
+  </Tab>
+  
+  <Tab title="Get Threads">
+    ```typescript
+    // Get conversation threads
+    const threads = await client.inbox.thread.list(inbox.id);
+
+    // Get specific thread with all messages
+    const thread = await client.inbox.thread.get(
+      inbox.id,
+      thread.id
+    );
+
+    console.log(`Messages in thread: ${thread.messages.length}`);
+    ```
+  </Tab>
+  
+  <Tab title="Reply to Message">
+    ```typescript
+    // Reply to a message (automatically threads)
+    const reply = await client.inbox.message.reply({
+      inboxId: inbox.id,
+      messageId: message.id,
+      text: "Thanks for your message!",
+      html: "<p>Thanks for your message!</p>"
+    });
+
+    console.log(`Reply sent: ${reply.id}`);
+    ```
+  </Tab>
+</Tabs>
+
+</Step>
+
+</Steps>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore all available endpoints and methods
+  </Card>
+  <Card title="Webhooks Guide" icon="webhook" href="/features/webhooks">
+    Learn about webhook events and best practices
+  </Card>
+  <Card title="Custom Domains" icon="globe" href="/features/custom-domains">
+    Set up and verify your custom email domain
+  </Card>
+  <Card title="SDK Documentation" icon="book" href="/sdk/installation">
+    Deep dive into the TypeScript SDK
+  </Card>
+</CardGroup>
+
+## Common Use Cases
+
+<AccordionGroup>
+  <Accordion title="Customer Support Emails">
+    Create a `support@sendook.com` inbox and use webhooks to automatically route incoming support emails to your ticketing system.
+    
+    ```typescript
+    const inbox = await client.inbox.create({
+      name: "support",
+      email: "support@sendook.com"
+    });
+    
+    const webhook = await client.webhook.create({
+      url: "https://your-app.com/create-ticket",
+      events: ["message.received"]
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Transactional Emails">
+    Send order confirmations, password resets, and notifications from your application.
+    
+    ```typescript
+    await client.inbox.message.send({
+      inboxId: inbox.id,
+      to: [user.email],
+      subject: "Order Confirmation #12345",
+      html: orderConfirmationTemplate,
+      labels: ["transactional", "order"]
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="AI Email Agents">
+    Use Sendook with AI to automatically handle incoming emails, like at Rupt.
+    
+    ```typescript
+    app.post("/webhooks/email", async (req, res) => {
+      const { payload } = req.body;
+      
+      // Process with AI
+      const response = await ai.processEmail(payload.text);
+      
+      // Send automated reply
+      await client.inbox.message.reply({
+        inboxId: payload.inboxId,
+        messageId: payload.id,
+        text: response,
+        html: `<p>${response}</p>`
+      });
+      
+      res.sendStatus(200);
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Need Help?
+
+<Card title="Join our Community" icon="discord" href="https://discord.gg/sendook">
+  Get help, share ideas, and connect with other Sendook users
+</Card>

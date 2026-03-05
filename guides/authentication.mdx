@@ -1,0 +1,241 @@
+---
+title: Authentication
+description: Learn how to authenticate with the Sendook API using API keys and access tokens
+---
+
+## Overview
+
+Sendook uses two authentication methods to secure API access:
+
+- **API Keys** - For programmatic API access and production environments
+- **Access Tokens** - For dashboard login and user-specific operations
+
+All API requests must include authentication credentials in the `Authorization` header.
+
+## API Keys
+
+API keys are used for server-to-server communication and provide access to your organization's resources.
+
+### Getting Your API Key
+
+1. Log in to your Sendook dashboard
+2. Navigate to **API Keys** in the sidebar
+3. Click **Generate key**
+4. Give your key a descriptive name
+5. Copy the key immediately - it will only be shown once
+
+<Warning>
+  API keys are sensitive credentials. Never commit them to version control or expose them in client-side code.
+</Warning>
+
+### Using API Keys
+
+Include your API key in the `Authorization` header with the `Bearer` scheme:
+
+```bash
+curl https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```typescript
+import Sendook from "@sendook/node";
+
+const client = new Sendook("YOUR_API_KEY");
+```
+
+### API Key Management
+
+**Creating API Keys**
+
+Each API key is associated with an organization and has full access to that organization's resources:
+
+```bash
+curl -X POST https://api.sendook.com/organizations/{organization_id}/api_keys \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Production API Key"}'
+```
+
+**Listing API Keys**
+
+```bash
+curl https://api.sendook.com/organizations/{organization_id}/api_keys \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Deleting API Keys**
+
+Revoke an API key immediately by deleting it:
+
+```bash
+curl -X DELETE https://api.sendook.com/organizations/{organization_id}/api_keys/{key_id} \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+<Note>
+  Deleting an API key immediately revokes access for all clients using that key.
+</Note>
+
+## Access Tokens
+
+Access tokens are used for user authentication in the dashboard and provide user-scoped access.
+
+### Login
+
+Exchange your email and password for an access token:
+
+```bash
+curl -X POST https://api.sendook.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "your-email@example.com",
+    "password": "your-password"
+  }'
+```
+
+Response:
+
+```json
+{
+  "user": {
+    "id": "user_id",
+    "email": "your-email@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "organizations": ["org_id"]
+  },
+  "token": "access_token_here"
+}
+```
+
+### Registration
+
+Create a new account:
+
+```bash
+curl -X POST https://api.sendook.com/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Doe",
+    "username": "your-email@example.com",
+    "password": "secure-password"
+  }'
+```
+
+The registration process automatically:
+- Creates a user account
+- Creates a default organization
+- Generates a default API key
+- Creates an initial inbox with a random `@sendook.com` email address
+
+## Authentication Best Practices
+
+### Secure Storage
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="lock">
+    Store API keys in environment variables, never in code:
+    ```bash
+    export SENDOOK_API_KEY="your_api_key"
+    ```
+  </Card>
+  
+  <Card title="Secret Management" icon="key">
+    Use secret management services like AWS Secrets Manager, HashiCorp Vault, or similar for production.
+  </Card>
+</CardGroup>
+
+### Key Rotation
+
+1. Generate a new API key in the dashboard
+2. Update your services to use the new key
+3. Verify all services are using the new key
+4. Delete the old API key
+
+### Multiple Environments
+
+Create separate API keys for different environments:
+
+- **Development** - For local development and testing
+- **Staging** - For pre-production testing
+- **Production** - For live production workloads
+
+This allows you to rotate keys without affecting other environments.
+
+### Access Control
+
+<Warning>
+  API keys have full access to all organization resources. Only share keys with trusted team members and services.
+</Warning>
+
+## Passport Strategies
+
+Sendook uses Passport.js for authentication with two strategies:
+
+### Bearer Token Strategy
+
+Used for access tokens obtained through login. The token is validated against the database and provides user-scoped access.
+
+### API Key Strategy
+
+Used for API keys created in the dashboard. The key is validated against the organization and provides organization-scoped access.
+
+## Testing Authentication
+
+Verify your authentication is working:
+
+```bash
+curl https://api.sendook.com/v1/inboxes \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -v
+```
+
+Successful authentication returns a 200 status code. Failed authentication returns:
+
+- **401 Unauthorized** - Invalid or missing credentials
+- **403 Forbidden** - Valid credentials but insufficient permissions
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized Error">
+    - Verify your API key is correct
+    - Check that you're including the `Bearer` prefix
+    - Ensure the API key hasn't been deleted
+    - Confirm you're sending the `Authorization` header
+  </Accordion>
+  
+  <Accordion title="API Key Not Working">
+    - Copy the full key from the dashboard
+    - Check for extra spaces or newlines
+    - Verify the key belongs to the correct organization
+    - Ensure the key is active
+  </Accordion>
+  
+  <Accordion title="Access Token Expired">
+    Access tokens may expire. If you receive authentication errors:
+    - Log in again to get a fresh token
+    - Implement token refresh logic in your application
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Guide" icon="gauge" href="/guides/dashboard">
+    Learn how to use the Sendook dashboard
+  </Card>
+  
+  <Card title="Sending Messages" icon="paper-plane" href="/api/messages">
+    Start sending emails with your API key
+  </Card>
+  
+  <Card title="Webhooks" icon="webhook" href="/features/webhooks">
+    Set up webhooks to receive events
+  </Card>
+  
+  <Card title="Billing" icon="credit-card" href="/guides/billing">
+    Understand usage-based billing
+  </Card>
+</CardGroup>

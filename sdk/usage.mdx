@@ -1,0 +1,391 @@
+---
+title: 'Usage'
+description: 'Learn how to use the Sendook Node.js SDK'
+---
+
+## Initialization
+
+Initialize the SDK with your API secret key:
+
+```typescript
+import SendookAPI from '@sendook/node';
+
+// Using default API URL (https://api.sendook.com)
+const client = new SendookAPI('your_api_secret');
+
+// Using custom API URL (for self-hosted instances)
+const client = new SendookAPI('your_api_secret', 'https://your-api.com');
+```
+
+<Warning>
+  Keep your API secret secure and never commit it to version control. Use environment variables to store sensitive credentials.
+</Warning>
+
+### Using Environment Variables
+
+```typescript
+import SendookAPI from '@sendook/node';
+
+const client = new SendookAPI(process.env.SENDOOK_API_SECRET!);
+```
+
+## Working with Inboxes
+
+### Create an Inbox
+
+```typescript
+// Create inbox with Sendook domain
+const inbox = await client.inbox.create({
+  name: 'support',
+  email: 'support@sendook.com'
+});
+
+// Create inbox without specifying email (auto-generated)
+const inbox = await client.inbox.create({
+  name: 'sales'
+});
+
+// Create inbox with custom domain (requires domain verification)
+const inbox = await client.inbox.create({
+  name: 'hello',
+  email: 'hello@yourdomain.com'
+});
+```
+
+### List All Inboxes
+
+```typescript
+const inboxes = await client.inbox.list();
+console.log(inboxes);
+```
+
+### Get an Inbox
+
+```typescript
+const inbox = await client.inbox.get('inbox_id');
+console.log(inbox);
+```
+
+### Delete an Inbox
+
+```typescript
+await client.inbox.delete('inbox_id');
+```
+
+<Note>
+  Deleting an inbox will also delete all messages associated with it.
+</Note>
+
+## Sending Messages
+
+### Send an Email
+
+```typescript
+const result = await client.inbox.message.send({
+  inboxId: 'inbox_id',
+  to: ['recipient@example.com'],
+  subject: 'Welcome to Sendook',
+  text: 'Thanks for signing up!',
+  html: '<h1>Thanks for signing up!</h1>'
+});
+```
+
+### Send with CC and BCC
+
+```typescript
+const result = await client.inbox.message.send({
+  inboxId: 'inbox_id',
+  to: ['recipient@example.com'],
+  cc: ['manager@example.com'],
+  bcc: ['archive@example.com'],
+  subject: 'Team Update',
+  text: 'Here is the latest update.',
+  html: '<p>Here is the latest update.</p>'
+});
+```
+
+### Send with Labels
+
+```typescript
+const result = await client.inbox.message.send({
+  inboxId: 'inbox_id',
+  to: ['customer@example.com'],
+  labels: ['newsletter', 'marketing'],
+  subject: 'Monthly Newsletter',
+  text: 'Check out our latest news.',
+  html: '<p>Check out our latest news.</p>'
+});
+```
+
+### Reply to a Message
+
+```typescript
+const result = await client.inbox.message.reply({
+  inboxId: 'inbox_id',
+  messageId: 'message_id',
+  text: 'Thanks for your message!',
+  html: '<p>Thanks for your message!</p>'
+});
+```
+
+## Receiving Messages
+
+### List Messages
+
+```typescript
+// List all messages in an inbox
+const messages = await client.inbox.message.list('inbox_id');
+
+// Search messages with query
+const results = await client.inbox.message.list(
+  'inbox_id',
+  'subject:invoice'
+);
+```
+
+### Get a Specific Message
+
+```typescript
+const message = await client.inbox.message.get('inbox_id', 'message_id');
+console.log(message);
+```
+
+## Working with Threads
+
+### List Threads
+
+```typescript
+const threads = await client.inbox.thread.list('inbox_id');
+console.log(threads);
+```
+
+### Get a Thread
+
+```typescript
+const thread = await client.inbox.thread.get('inbox_id', 'thread_id');
+console.log(thread);
+```
+
+## Managing Domains
+
+### Create a Domain
+
+```typescript
+const domain = await client.domain.create({
+  name: 'yourdomain.com'
+});
+```
+
+### Get Domain Details
+
+```typescript
+const domain = await client.domain.get({
+  domainId: 'domain_id'
+});
+```
+
+### Get DNS Records
+
+```typescript
+const dnsRecords = await client.domain.dns({
+  domainId: 'domain_id'
+});
+console.log(dnsRecords);
+```
+
+### Verify Domain
+
+```typescript
+const result = await client.domain.verify({
+  domainId: 'domain_id'
+});
+console.log(result);
+```
+
+### Delete a Domain
+
+```typescript
+await client.domain.delete({
+  domainId: 'domain_id'
+});
+```
+
+## Working with Webhooks
+
+### Create a Webhook
+
+```typescript
+const webhook = await client.webhook.create({
+  url: 'https://your-app.com/webhooks/sendook',
+  events: ['message.received', 'message.sent']
+});
+```
+
+### List All Webhooks
+
+```typescript
+const webhooks = await client.webhook.list();
+console.log(webhooks);
+```
+
+### Get a Webhook
+
+```typescript
+const webhook = await client.webhook.get('webhook_id');
+console.log(webhook);
+```
+
+### Test a Webhook
+
+```typescript
+const result = await client.webhook.test('webhook_id');
+console.log(result);
+```
+
+### Delete a Webhook
+
+```typescript
+await client.webhook.delete('webhook_id');
+```
+
+## Managing API Keys
+
+### Create an API Key
+
+```typescript
+const apiKey = await client.apiKey.create({
+  name: 'Production Key'
+});
+console.log(apiKey);
+```
+
+### List All API Keys
+
+```typescript
+const apiKeys = await client.apiKey.list();
+console.log(apiKeys);
+```
+
+### Get an API Key
+
+```typescript
+const apiKey = await client.apiKey.get({
+  apiKeyId: 'api_key_id'
+});
+```
+
+### Delete an API Key
+
+```typescript
+await client.apiKey.delete({
+  apiKeyId: 'api_key_id'
+});
+```
+
+## Error Handling
+
+The SDK uses axios for HTTP requests. Wrap API calls in try-catch blocks:
+
+```typescript
+import SendookAPI from '@sendook/node';
+
+const client = new SendookAPI(process.env.SENDOOK_API_SECRET!);
+
+try {
+  const inbox = await client.inbox.create({
+    name: 'support',
+    email: 'support@sendook.com'
+  });
+  console.log('Inbox created:', inbox);
+} catch (error) {
+  if (error.response) {
+    // Server responded with error
+    console.error('API Error:', error.response.status);
+    console.error('Details:', error.response.data);
+  } else if (error.request) {
+    // Request made but no response
+    console.error('No response from server');
+  } else {
+    // Other errors
+    console.error('Error:', error.message);
+  }
+}
+```
+
+## Common Patterns
+
+### Complete Email Flow
+
+```typescript
+import SendookAPI from '@sendook/node';
+
+const client = new SendookAPI(process.env.SENDOOK_API_SECRET!);
+
+async function setupEmailFlow() {
+  // 1. Create an inbox
+  const inbox = await client.inbox.create({
+    name: 'support',
+    email: 'support@sendook.com'
+  });
+  
+  // 2. Set up webhook to receive emails
+  const webhook = await client.webhook.create({
+    url: 'https://your-app.com/webhooks/email',
+    events: ['message.received']
+  });
+  
+  // 3. Send a welcome email
+  await client.inbox.message.send({
+    inboxId: inbox.id,
+    to: ['user@example.com'],
+    subject: 'Welcome!',
+    text: 'Thanks for contacting support.',
+    html: '<h1>Thanks for contacting support.</h1>'
+  });
+  
+  console.log('Email flow setup complete!');
+}
+
+setupEmailFlow();
+```
+
+### Processing Webhook Events
+
+```typescript
+import express from 'express';
+import SendookAPI from '@sendook/node';
+
+const app = express();
+const client = new SendookAPI(process.env.SENDOOK_API_SECRET!);
+
+app.post('/webhooks/email', express.json(), async (req, res) => {
+  const { event, data } = req.body;
+  
+  if (event === 'message.received') {
+    console.log('New message received:', data.messageId);
+    
+    // Auto-reply to the message
+    await client.inbox.message.reply({
+      inboxId: data.inboxId,
+      messageId: data.messageId,
+      text: 'Thanks for your message! We\'ll get back to you soon.',
+      html: '<p>Thanks for your message! We\'ll get back to you soon.</p>'
+    });
+  }
+  
+  res.status(200).send('OK');
+});
+
+app.listen(3000);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/sdk/api-reference">
+    Explore the complete API reference
+  </Card>
+  <Card title="API Endpoints" icon="server" href="/api/overview">
+    View the REST API documentation
+  </Card>
+</CardGroup>

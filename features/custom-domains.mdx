@@ -1,0 +1,425 @@
+---
+title: "Custom Domains"
+description: "Add and verify custom domains for sending and receiving emails"
+---
+
+## Overview
+
+Use your own domain for sending and receiving emails to maintain brand identity and improve deliverability. Custom domains require DNS verification through MX, DKIM, SPF, and DMARC records.
+
+## Why Use Custom Domains?
+
+<CardGroup cols={2}>
+  <Card title="Brand Identity" icon="building">
+    Send emails from your own domain (e.g., support@yourbrand.com) instead of @sendook.com
+  </Card>
+  
+  <Card title="Better Deliverability" icon="check-circle">
+    Properly configured custom domains improve email deliverability and reduce spam scores
+  </Card>
+  
+  <Card title="Professional Appearance" icon="star">
+    Emails from your domain appear more trustworthy to recipients
+  </Card>
+  
+  <Card title="Receive Emails" icon="inbox">
+    Route incoming emails to your domain through Sendook
+  </Card>
+</CardGroup>
+
+## Adding a Custom Domain
+
+<Steps>
+  <Step title="Create the domain">
+    Add your domain to Sendook:
+    
+    <CodeGroup>
+    
+    ```typescript Node.js SDK
+    import Sendook from "@sendook/node";
+    
+    const client = new Sendook("your_api_key");
+    
+    const domain = await client.domain.create({
+      name: "yourdomain.com"
+    });
+    
+    console.log(domain);
+    // {
+    //   id: "domain_123",
+    //   organizationId: "org_456",
+    //   name: "yourdomain.com",
+    //   verified: false,
+    //   records: [],
+    //   createdAt: "2024-01-01T00:00:00.000Z"
+    // }
+    ```
+    
+    ```bash cURL
+    curl -X POST https://api.sendook.com/v1/domains \
+      -H "Authorization: Bearer your_api_key" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "yourdomain.com"
+      }'
+    ```
+    
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Get DNS records">
+    Retrieve the DNS records you need to configure:
+    
+    <CodeGroup>
+    
+    ```typescript Node.js SDK
+    const dnsRecords = await client.domain.dns({
+      domainId: "yourdomain.com"
+    });
+    
+    console.log(dnsRecords);
+    ```
+    
+    ```bash cURL
+    curl https://api.sendook.com/v1/domains/yourdomain.com/dns \
+      -H "Authorization: Bearer your_api_key"
+    ```
+    
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Configure DNS">
+    Add the DNS records to your domain's DNS settings (see detailed instructions below).
+  </Step>
+  
+  <Step title="Verify the domain">
+    After adding DNS records, verify your domain:
+    
+    <CodeGroup>
+    
+    ```typescript Node.js SDK
+    const verifiedDomain = await client.domain.verify({
+      domainId: "yourdomain.com"
+    });
+    
+    console.log(verifiedDomain.verified); // true
+    ```
+    
+    ```bash cURL
+    curl -X POST https://api.sendook.com/v1/domains/yourdomain.com/verify \
+      -H "Authorization: Bearer your_api_key"
+    ```
+    
+    </CodeGroup>
+  </Step>
+</Steps>
+
+<Note>
+  DNS changes can take up to 48 hours to propagate, but typically complete within a few hours.
+</Note>
+
+## Required DNS Records
+
+You'll need to configure four types of DNS records:
+
+### 1. MX Record (Mail Exchange)
+
+Routes incoming emails to AWS SES:
+
+```
+Type: MX
+Name: @ (or subdomain)
+Priority: 10
+Value: inbound-smtp.us-east-2.amazonaws.com
+```
+
+<Accordion title="What is an MX record?">
+  MX (Mail Exchange) records tell other email servers where to send emails for your domain. This record directs incoming emails to AWS SES, which Sendook uses to receive and process your emails.
+</Accordion>
+
+### 2. DKIM Records (DomainKeys Identified Mail)
+
+Verifies email authenticity (3 CNAME records):
+
+```
+Type: CNAME
+Name: {token1}._domainkey.yourdomain.com
+Value: {token1}.dkim.amazonses.com
+
+Type: CNAME
+Name: {token2}._domainkey.yourdomain.com
+Value: {token2}.dkim.amazonses.com
+
+Type: CNAME
+Name: {token3}._domainkey.yourdomain.com
+Value: {token3}.dkim.amazonses.com
+```
+
+<Note>
+  The `{token}` values are unique to your domain and returned by the DNS endpoint. They look like: `abcd1234efgh5678ijkl`
+</Note>
+
+<Accordion title="What is DKIM?">
+  DKIM adds a digital signature to your emails, allowing recipients to verify that emails claiming to be from your domain were actually sent by you and haven't been tampered with in transit.
+</Accordion>
+
+### 3. SPF Record (Sender Policy Framework)
+
+Authorizes AWS SES to send emails on your behalf:
+
+```
+Type: TXT
+Name: @ (or subdomain)
+Value: v=spf1 include:amazonses.com ~all
+```
+
+<Accordion title="What is SPF?">
+  SPF specifies which mail servers are allowed to send emails on behalf of your domain. This helps prevent email spoofing and improves deliverability.
+</Accordion>
+
+<Warning>
+  If you already have an SPF record, you'll need to add `include:amazonses.com` to your existing record rather than creating a new one. Multiple SPF records can cause delivery issues.
+</Warning>
+
+### 4. DMARC Record (optional but recommended)
+
+Defines how to handle emails that fail authentication:
+
+```
+Type: TXT
+Name: _dmarc (or _dmarc.subdomain)
+Value: v=DMARC1; p=reject;
+```
+
+<Accordion title="What is DMARC?">
+  DMARC builds on SPF and DKIM to provide additional protection against email spoofing. It tells receiving mail servers what to do with emails that fail authentication checks (reject, quarantine, or monitor).
+</Accordion>
+
+<Tip>
+  Start with `p=none` to monitor without affecting delivery, then move to `p=quarantine` or `p=reject` once you're confident your setup is correct.
+</Tip>
+
+## DNS Configuration Examples
+
+### Cloudflare
+
+1. Go to your domain in Cloudflare
+2. Click **DNS** in the sidebar
+3. Add each record with the values provided
+4. Make sure **Proxy status** is set to **DNS only** (gray cloud)
+
+### GoDaddy
+
+1. Log in to your GoDaddy account
+2. Go to **My Products** → **DNS**
+3. Click **Add** for each record type
+4. Enter the name, type, and value for each record
+
+### Namecheap
+
+1. Log in to Namecheap
+2. Go to **Domain List** and click **Manage**
+3. Go to **Advanced DNS**
+4. Click **Add New Record** for each DNS entry
+
+### Route 53 (AWS)
+
+1. Go to the Route 53 console
+2. Select your hosted zone
+3. Click **Create Record**
+4. Add each record type with the provided values
+
+## Verifying Your Domain
+
+After adding DNS records:
+
+1. Wait 5-10 minutes for DNS propagation
+2. Call the verify endpoint
+3. Check the verification status
+
+```typescript
+const domain = await client.domain.verify({
+  domainId: "yourdomain.com"
+});
+
+if (domain.verified) {
+  console.log("Domain verified! You can now use it.");
+} else {
+  console.log("Verification pending. Check DNS records.");
+  console.log(domain.records); // Shows which records are missing/incorrect
+}
+```
+
+<Warning>
+  Your domain must be verified before you can create inboxes with it. Attempting to create an inbox with an unverified domain will return a 404 error.
+</Warning>
+
+## Managing Domains
+
+### List All Domains
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const domains = await client.domain.list();
+
+console.log(domains);
+// [
+//   {
+//     id: "domain_123",
+//     name: "yourdomain.com",
+//     verified: true,
+//     createdAt: "2024-01-01T00:00:00.000Z"
+//   }
+// ]
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/domains \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+### Get Domain Details
+
+<CodeGroup>
+
+```typescript Node.js SDK
+const domain = await client.domain.get({
+  domainId: "yourdomain.com"
+});
+
+console.log(domain);
+```
+
+```bash cURL
+curl https://api.sendook.com/v1/domains/yourdomain.com \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+### Delete a Domain
+
+<CodeGroup>
+
+```typescript Node.js SDK
+await client.domain.delete({
+  domainId: "yourdomain.com"
+});
+```
+
+```bash cURL
+curl -X DELETE https://api.sendook.com/v1/domains/yourdomain.com \
+  -H "Authorization: Bearer your_api_key"
+```
+
+</CodeGroup>
+
+<Warning>
+  Deleting a domain will prevent you from using it for new inboxes, but existing inboxes using that domain will continue to work until they're deleted.
+</Warning>
+
+## Using Subdomains
+
+You can also use subdomains (e.g., `mail.yourdomain.com`):
+
+```typescript
+await client.domain.create({
+  name: "mail.yourdomain.com"
+});
+```
+
+Subdomains are useful for:
+- Separating transactional and marketing emails
+- Testing before switching your main domain
+- Using different configurations for different services
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Domain verification fails">
+    **Common causes:**
+    - DNS records haven't propagated yet (wait 10-30 minutes)
+    - Records are configured incorrectly (double-check values)
+    - Proxy is enabled on Cloudflare (must be DNS only)
+    - Multiple SPF records exist (combine into one)
+    
+    **Solution:** Use a DNS checker tool like [MXToolbox](https://mxtoolbox.com/) or [DNS Checker](https://dnschecker.org/) to verify your records are correct.
+  </Accordion>
+  
+  <Accordion title="Emails not being received">
+    **Check:**
+    - Domain is verified
+    - MX record is configured correctly
+    - MX record priority is set to 10
+    - DNS changes have propagated globally
+    
+    **Test:** Send an email to your custom domain inbox from an external email client.
+  </Accordion>
+  
+  <Accordion title="Sent emails going to spam">
+    **Improve deliverability:**
+    - Ensure all DNS records are configured (especially SPF, DKIM, DMARC)
+    - Warm up your domain by gradually increasing send volume
+    - Avoid spam trigger words in subject lines
+    - Include unsubscribe links in marketing emails
+    - Monitor your sender reputation
+  </Accordion>
+  
+  <Accordion title="SPF record conflicts">
+    If you already have an SPF record for other email services:
+    
+    **Incorrect:**
+    ```
+    v=spf1 include:outlook.com ~all
+    v=spf1 include:amazonses.com ~all
+    ```
+    
+    **Correct:**
+    ```
+    v=spf1 include:outlook.com include:amazonses.com ~all
+    ```
+    
+    Combine all `include:` directives into a single SPF record.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Tip>
+  **Start with a subdomain** - Test with a subdomain (e.g., `mail.yourdomain.com`) before configuring your main domain.
+</Tip>
+
+<Tip>
+  **Monitor DNS records** - Regularly check that your DNS records remain correctly configured, especially after making other DNS changes.
+</Tip>
+
+<Tip>
+  **Use DMARC reporting** - Configure DMARC with `rua` and `ruf` tags to receive reports about authentication failures.
+</Tip>
+
+<Tip>
+  **Warm up your domain** - For new domains, start with low send volumes and gradually increase to build sender reputation.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Create Inboxes" icon="inbox" href="/features/inboxes">
+    Create inboxes using your verified custom domain
+  </Card>
+  
+  <Card title="Send Emails" icon="paper-plane" href="/features/sending-emails">
+    Start sending emails from your custom domain
+  </Card>
+  
+  <Card title="Receive Emails" icon="envelope" href="/features/receiving-emails">
+    Set up webhooks to receive emails at your domain
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api/domains">
+    View complete domain API documentation
+  </Card>
+</CardGroup>
